@@ -1,7 +1,12 @@
+library(dplyr)
 library(shiny)
 library(igraph)
 library(RColorBrewer)
-
+library(GGally)
+library(stringr)
+#library(plotly)
+library(network)
+library(tidyr)
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
 
@@ -28,42 +33,55 @@ shinyServer(function(input, output, session) {
         )
     })
     
-    
-    
-    # Make the plot
-    output$plot1 <- renderPlot({
-        selected_bee <- input$bees
+    plot_gg <- eventReactive(input$bees,{
+        
+        selected_bee <- unlist(input$bees)
         
         nice_loc <- input$region
         
         fil_db <- db[db$locs == nice_loc,]
         
-        fil2_db <- fil_db[fil_db$bee_sp == selected_bee,]
+        fil2_db <- fil_db[fil_db$bee_sp %in% selected_bee,]
+            
+            bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
+                mutate(Freq = Freq*0.1) %>% 
+                spread(key = bee_sp, value = Freq) %>% 
+                tibble::column_to_rownames("plant_sp") 
+            
+            bip <- network(bip_table,
+                           matrix.type = "bipartite",
+                           ignore.eval = FALSE,
+                           names.eval = "weights")
         
-        plant_ints <- table(fil2_db$plant_sp)
+            col = c("actor" = "#50C878", "event" = "#FFAA1D")
+            
+            gg <- ggnet2(bip, label = TRUE, color = "mode", palette = col, edge.size = 'weights') +
+                theme(legend.position = 'none')
         
-        links <- data.frame(
-            source=selected_bee,
-            target=names(plant_ints),
-            importance= plant_ints)
-        
-        nodes <- data.frame(
-            name= c(selected_bee, names(plant_ints)),
-            carac=c('bee', rep('plant', length(plant_ints))))
-        
-        network <- graph_from_data_frame(d=links, vertices=nodes, directed=F) 
-        
-        # Make a palette of 3 colors
-        coul  <- c("#FFAA1D", "#50C878")
-        
-        # Create a vector of color
-        my_color <- coul[as.numeric(as.factor(V(network)$carac))]
-        
-        plot(network, vertex.color=my_color, edge.width=E(network)$importance.Freq, vertex.size = 50)    
-        })
+        gg
+    })
     
+    # Make the plot
+    output$plot1 <- renderPlot({
+        plot_gg()
+        })
+   
     output$info <- renderText({
-        paste0("bee=", input$plot_click$x)
+        ggp <- plot_gg()
+        min_x <- min(all_dist <- Rfast::dista(matrix(c(x = input$plot_click$x, y = input$plot_click$y), nrow =1), as.matrix(ggp$data[,c("x", "y")])))
+        sp_name <- ggp$data[which(all_dist == min(all_dist)),"label"]
+        sp_name2 <- str_replace(sp_name, "\n", " ")
+        paste("selected species=",sp_name2, "\n")
+    })
+    output$mySite <- renderUI({
+        ggp <- plot_gg()
+        min_x <- min(all_dist <- Rfast::dista(matrix(c(x = input$plot_click$x, y = input$plot_click$y), nrow =1), as.matrix(ggp$data[,c("x", "y")])))
+        sp_name <- ggp$data[which(all_dist == min(all_dist)),"label"]
+        sp_name3 <- str_replace(sp_name, "\n", "_")
+        sp_name2 <- str_replace(sp_name, "\n", " ")
+        website <- paste0("https://en.wikipedia.org/wiki/", sp_name3)
+        url <- a(sp_name2, href=website)
+        tagList("Wikipedia link:", url)
     })
     
 })

@@ -136,7 +136,23 @@ db2 <- db %>%
   filter(!str_detect(Species, "sp.")) %>% 
   unite(col = "bee_sp", GenusName, Species, sep = "\n") %>% 
   rename(plant_sp = Species.Name) %>% 
-  mutate(plant_sp = str_replace(plant_sp, " ", "\n"))
+  mutate(plant_sp = str_replace(plant_sp, " ", "\n")) 
   
 
 write.csv(db2, "data/site_net_loc_fil.csv", row.names = FALSE)
+
+
+###### getting wikipedia articles for species ###
+
+library(WikipediaR)
+
+db <- read.csv("data/site_net_loc_fil.csv")
+
+bee_sp <- str_replace(unique(db$bee_sp), "\n", " ")
+
+links <- links("Bombus huntii")
+
+links$page
+
+
+
