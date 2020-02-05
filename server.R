@@ -1,7 +1,6 @@
 library(dplyr)
 library(shiny)
 library(igraph)
-library(RColorBrewer)
 library(GGally)
 library(stringr)
 #library(plotly)
@@ -43,11 +42,19 @@ shinyServer(function(input, output, session) {
         
         fil2_db <- fil_db[fil_db$bee_sp %in% selected_bee,]
             
+        if(length(selected_bee) == 1){
+            
             bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
                 mutate(Freq = Freq*0.1) %>% 
                 spread(key = bee_sp, value = Freq) %>% 
+                mutate(` ` = 0) %>% 
                 tibble::column_to_rownames("plant_sp") 
-            
+        }else{
+            bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
+                mutate(Freq = Freq*0.1) %>% 
+                spread(key = bee_sp, value = Freq) %>% 
+                tibble::column_to_rownames("plant_sp")  
+        }
             bip <- network(bip_table,
                            matrix.type = "bipartite",
                            ignore.eval = FALSE,
@@ -60,7 +67,7 @@ shinyServer(function(input, output, session) {
         
         gg
     })
-    
+
     # Make the plot
     output$plot1 <- renderPlot({
         plot_gg()
@@ -68,20 +75,35 @@ shinyServer(function(input, output, session) {
    
     output$info <- renderText({
         ggp <- plot_gg()
-        min_x <- min(all_dist <- Rfast::dista(matrix(c(x = input$plot_click$x, y = input$plot_click$y), nrow =1), as.matrix(ggp$data[,c("x", "y")])))
-        sp_name <- ggp$data[which(all_dist == min(all_dist)),"label"]
-        sp_name2 <- str_replace(sp_name, "\n", " ")
-        paste("selected species=",sp_name2, "\n")
+        p_x <- input$plot_click$x
+        p_y <- input$plot_click$y
+        
+        if (is.null(input$plot_click$x)){
+            "Click on any species to see information about it."
+        }else{
+            min_x <- min(all_dist <- Rfast::dista(matrix(c(x = p_x, y = p_y), nrow =1), as.matrix(ggp$data[,c("x", "y")])))
+            sp_name <- ggp$data[which(all_dist == min(all_dist)),"label"]
+            sp_name2 <- str_replace(sp_name, "\n", " ")
+            paste("selected species=",sp_name2, "\n")
+        }
     })
     output$mySite <- renderUI({
+        
         ggp <- plot_gg()
-        min_x <- min(all_dist <- Rfast::dista(matrix(c(x = input$plot_click$x, y = input$plot_click$y), nrow =1), as.matrix(ggp$data[,c("x", "y")])))
-        sp_name <- ggp$data[which(all_dist == min(all_dist)),"label"]
-        sp_name3 <- str_replace(sp_name, "\n", "_")
-        sp_name2 <- str_replace(sp_name, "\n", " ")
-        website <- paste0("https://en.wikipedia.org/wiki/", sp_name3)
-        url <- a(sp_name2, href=website)
-        tagList("Wikipedia link:", url)
+        p_x <- input$plot_click$x
+        p_y <- input$plot_click$y
+        
+        if (is.null(input$plot_click$x)){
+            " "
+        }else{
+            min_x <- min(all_dist <- Rfast::dista(matrix(c(x = input$plot_click$x, y = input$plot_click$y), nrow =1), as.matrix(ggp$data[,c("x", "y")])))
+            sp_name <- ggp$data[which(all_dist == min(all_dist)),"label"]
+            sp_name3 <- str_replace(sp_name, "\n", "_")
+            sp_name2 <- str_replace(sp_name, "\n", " ")
+            website <- paste0("https://en.wikipedia.org/wiki/", sp_name3)
+            url <- a(sp_name2, href=website)
+            tagList("Wikipedia link:", url)
+        }
     })
     
 })
