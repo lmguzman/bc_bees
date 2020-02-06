@@ -20,56 +20,112 @@ shinyServer(function(input, output, session) {
         
         fil_db <- db[db$locs == nice_loc,]
         
-        avail_bees <- sort(unique(fil_db$bee_sp))
+        type_net <- input$net_type
         
-        if (is.null(avail_bees))
-            avail_bees <- character(0)
+        if(type_net == "Pollinator"){
+            
+            t_bees <- table(fil_db$bee_sp)
+            avail_bees <- sort(names(t_bees)[t_bees >1])
+            
+            if (is.null(avail_bees))
+                avail_bees <- character(0)
+            
+            updateSelectInput(session, "bees",
+                              label = "Pollinator species",
+                              choices = avail_bees,
+                              selected = NULL
+            )
+        }else{
+            
+            t_plants <- table(fil_db$plant_sp)
+            
+            avail_plants <- sort(names(t_plants)[t_plants >1])
+            
+            if (is.null(avail_plants))
+                avail_plants <- character(0)
+            
+            updateSelectInput(session, "plants",
+                              label = "Plant species",
+                              choices = avail_plants,
+                              selected = NULL)
+            
+        }
         
-        updateSelectInput(session, "bees",
-                          label = "Bee species",
-                          choices = avail_bees,
-                          selected = NULL
-        )
+        
     })
     
-    plot_gg <- eventReactive(input$bees,{
+    plot_gg <- eventReactive(c(
+        input$net_type,
+        input$bees,
+        input$plants
+    ),{
         
-        selected_bee <- unlist(input$bees)
+        type_net <- input$net_type
+        
+        if(type_net == "Pollinator"){
+            selected_sp <- unlist(input$bees)
+        }else{
+            selected_sp <- unlist(input$plants)
+        }
         
         nice_loc <- input$region
         
         fil_db <- db[db$locs == nice_loc,]
         
-        fil2_db <- fil_db[fil_db$bee_sp %in% selected_bee,]
+        
+        if(!is.null(selected_sp)){
             
-        if(length(selected_bee) == 1){
+            if(type_net == "Pollinator"){
+                fil2_db <- fil_db[fil_db$bee_sp %in% selected_sp,]
+            }else{
+                fil2_db <- fil_db[fil_db$plant_sp %in% selected_sp,]
+            }
             
-            bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
-                mutate(Freq = Freq*0.1) %>% 
-                spread(key = bee_sp, value = Freq) %>% 
-                mutate(` ` = 0) %>% 
-                tibble::column_to_rownames("plant_sp") 
-        }else{
-            bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
-                mutate(Freq = Freq*0.1) %>% 
-                spread(key = bee_sp, value = Freq) %>% 
-                tibble::column_to_rownames("plant_sp")  
-        }
+            if(length(selected_sp) == 1){
+                
+                
+                if(type_net == "Pollinator"){
+                    bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
+                        mutate(Freq = Freq*0.1) %>% 
+                        spread(key = bee_sp, value = Freq) %>% 
+                        mutate(` ` = 0) %>% 
+                        tibble::column_to_rownames("plant_sp")
+                }else{
+                    bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
+                        mutate(Freq = Freq*0.1) %>% 
+                        spread(key = bee_sp, value = Freq) %>% 
+                        tibble::column_to_rownames("plant_sp")
+                    bip_table[2,] <- 0
+                    rownames(bip_table)[2] <- ""
+                }
+                
+                
+            }else{
+                bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
+                    mutate(Freq = Freq*0.1) %>% 
+                    spread(key = bee_sp, value = Freq) %>% 
+                    tibble::column_to_rownames("plant_sp")  
+            }
             bip <- network(bip_table,
                            matrix.type = "bipartite",
                            ignore.eval = FALSE,
                            names.eval = "weights")
-        
+            
             col = c("actor" = "#50C878", "event" = "#FFAA1D")
             
             gg <- ggnet2(bip, label = TRUE, color = "mode", palette = col, edge.size = 'weights') +
                 theme(legend.position = 'none')
-        
-        gg
+            
+            gg
+            
+            
+        }
+
     })
 
     # Make the plot
     output$plot1 <- renderPlot({
+        
         plot_gg()
         })
    

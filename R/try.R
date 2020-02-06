@@ -4,6 +4,16 @@ input$region <- "Cowichan"
 
 input$bees <- c("Bombus\nmixtus")
 
+input$net_type <- "Plant"
+
+input$plants <- c("Camassia\nquamash")
+
+
+sort(unique(db$bee_sp))
+db %>% 
+  filter(locs == "Cowichan", bee_sp == "Andrena\nvicina")
+
+
 p <- plot(network, vertex.color=my_color, edge.width=E(network)$importance.Freq, vertex.size = 50)  
 
 

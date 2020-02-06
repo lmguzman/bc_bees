@@ -16,11 +16,21 @@ shinyUI(dashboardPage(
             selectInput(inputId = 'region',
                         label = 'Region',
                         choices = nice_locations),
-            selectInput(inputId = 'bees',
-                        label = 'Bee species',
-                        choices = c("bee1", 'bee2'), 
-                        multiple = TRUE)
-            
+            selectInput(inputId = 'net_type',
+                        label = 'Type of Network',
+                        choices = c("Pollinator", "Plant")),
+            conditionalPanel('input.net_type == "Pollinator"', 
+                             selectInput(inputId = 'bees',
+                                         label = 'Pollinator species',
+                                         choices = c("bee1", 'bee2'), 
+                                         multiple = TRUE)
+                             ),
+            conditionalPanel('input.net_type == "Plant"', 
+                             selectInput(inputId = 'plants',
+                                         label = 'Plant species',
+                                         choices = c("plant1", 'plant2'), 
+                                         multiple = TRUE)
+            )
         ),
 
         # Show a plot of the generated distribution
