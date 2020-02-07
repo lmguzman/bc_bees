@@ -141,6 +141,17 @@ db2 <- db %>%
 
 write.csv(db2, "data/site_net_loc_fil.csv", row.names = FALSE)
 
+#########cleaning up names #####
+
+library(purrr)
+
+db <- read.csv("data/site_net_loc_fil.csv")
+
+sps_loc <- db %>%  
+  select(bee_sp, plant_sp, locs) %>% 
+  mutate(bee_sp = str_replace(bee_sp, "\n", " "), plant_sp = str_replace(plant_sp, "\n", " "))
+
+sort(unique(sps_loc$bee_sp))
 
 ###### getting wikipedia articles for species ###
 
@@ -154,5 +165,5 @@ links <- links("Bombus huntii")
 
 links$page
 
-
+links$links
 

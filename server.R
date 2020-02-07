@@ -129,31 +129,33 @@ shinyServer(function(input, output, session) {
         plot_gg()
         })
    
-    output$info <- renderText({
+    
+    sp_name_plot <- eventReactive(input$plot_click$x,{
+        
         ggp <- plot_gg()
         p_x <- input$plot_click$x
         p_y <- input$plot_click$y
+        min_x <- min(all_dist <- Rfast::dista(matrix(c(x = p_x, y = p_y), nrow =1), as.matrix(ggp$data[,c("x", "y")])))
+        sp_name <- ggp$data[which(all_dist == min(all_dist)),"label"]
         
+        sp_name
+    })
+    
+    output$info <- renderText({
+
         if (is.null(input$plot_click$x)){
             "Click on any species to see information about it."
         }else{
-            min_x <- min(all_dist <- Rfast::dista(matrix(c(x = p_x, y = p_y), nrow =1), as.matrix(ggp$data[,c("x", "y")])))
-            sp_name <- ggp$data[which(all_dist == min(all_dist)),"label"]
+            sp_name <- sp_name_plot()
             sp_name2 <- str_replace(sp_name, "\n", " ")
             paste("selected species=",sp_name2, "\n")
         }
     })
     output$mySite <- renderUI({
-        
-        ggp <- plot_gg()
-        p_x <- input$plot_click$x
-        p_y <- input$plot_click$y
-        
         if (is.null(input$plot_click$x)){
             " "
         }else{
-            min_x <- min(all_dist <- Rfast::dista(matrix(c(x = input$plot_click$x, y = input$plot_click$y), nrow =1), as.matrix(ggp$data[,c("x", "y")])))
-            sp_name <- ggp$data[which(all_dist == min(all_dist)),"label"]
+            sp_name <- sp_name_plot()
             sp_name3 <- str_replace(sp_name, "\n", "_")
             sp_name2 <- str_replace(sp_name, "\n", " ")
             website <- paste0("https://en.wikipedia.org/wiki/", sp_name3)
@@ -161,5 +163,22 @@ shinyServer(function(input, output, session) {
             tagList("Wikipedia link:", url)
         }
     })
+    
+    output$spImage <- renderImage({
+        if (is.null(input$plot_click$x)){
+            " " 
+        }else{
+            sp_name <- sp_name_plot()
+            sp_name3 <- str_replace(sp_name, "\n", "_")
+            filename <- normalizePath(file.path('./Images',
+                                                paste(sp_name3, '.jpg', sep='')))
+            return(list(
+                src = filename,
+                filetype = "image/jpeg",
+                alt = "We currently don't have an image for this species."
+            ))
+        }
+        
+    }, deleteFile = FALSE)
     
 })
