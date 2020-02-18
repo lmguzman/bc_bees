@@ -8,6 +8,9 @@ input$net_type <- "Plant"
 
 input$plants <- c("Camassia\nquamash")
 
+input$maximizer <-  "Pollinator abundance"
+
+input$nplants <- 10
 
 sort(unique(db$bee_sp))
 db %>% 
