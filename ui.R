@@ -51,7 +51,7 @@ shinyUI(dashboardPage(
                 plotOutput("plot1", click= "plot_click")),
             fluidRow(
                 verbatimTextOutput("info"),
-                htmlOutput("mySite")),
+                htmlOutput("mySite"))
         )
     )
 )
