@@ -40,9 +40,6 @@ shinyUI(dashboardPage(
             fluidRow(
                 verbatimTextOutput("info"),
                 htmlOutput("mySite")),
-            fluidRow(
-                imageOutput("spImage")
-            )
         )
     )
 )

@@ -163,22 +163,6 @@ shinyServer(function(input, output, session) {
             tagList("Wikipedia link:", url)
         }
     })
-    
-    output$spImage <- renderImage({
-        if (is.null(input$plot_click$x)){
-            " " 
-        }else{
-            sp_name <- sp_name_plot()
-            sp_name3 <- str_replace(sp_name, "\n", "_")
-            filename <- normalizePath(file.path('./Images',
-                                                paste(sp_name3, '.jpg', sep='')))
-            return(list(
-                src = filename,
-                filetype = "image/jpeg",
-                alt = "We currently don't have an image for this species."
-            ))
-        }
-        
-    }, deleteFile = FALSE)
+
     
 })
