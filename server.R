@@ -18,8 +18,12 @@ shinyServer(function(input, output, session) {
         # Can use character(0) to remove all choices
         nice_loc <- input$region
         
-        fil_db <- db[db$locs == nice_loc,]
-        
+        if(nice_loc == "All"){
+            fil_db <- db
+        }else{
+            fil_db <- db[db$locs == nice_loc,]
+        }
+
         type_net <- input$net_type
         
         if(type_net == "Pollinator"){
@@ -54,21 +58,53 @@ shinyServer(function(input, output, session) {
         
     })
     
-    maxi_plants <- eventReactive(input$go, {
-        input$maximizer
-        input$nplants
+    maxi_plants <- eventReactive(input$go,{
         
         nice_loc <- input$region
         
-        fil_db <- db[db$locs == nice_loc,]
+        n_plants <- input$n_plants
+        
+        if(nice_loc == "All"){
+            fil_db <- db
+        }else{
+            fil_db <- db[db$locs == nice_loc,]
+        }
+        
+        if(input$maximizer == "Pollinator abundance"){
+            
+            pl_sp <- names(sort(table(fil_db$plant_sp), decreasing = TRUE)[1:n_plants])
+        }else{
+            
+            tb <- table(fil_db$plant_sp, fil_db$bee_sp)
+            tb[tb > 0] <- 1
+            
+            pl_sp <- names(sort(rowSums(tb), decreasing = TRUE)[1:n_plants])
+        }
+        
+        
+        fil2_db <- fil_db[fil_db$plant_sp %in% pl_sp,]
+        
+        bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
+            mutate(Freq = Freq*0.1) %>% 
+            spread(key = bee_sp, value = Freq) %>% 
+            tibble::column_to_rownames("plant_sp")  
+        
+        bip <- network(bip_table,
+                       matrix.type = "bipartite",
+                       ignore.eval = FALSE,
+                       names.eval = "weights")
+        
+        col = c("actor" = "#50C878", "event" = "#FFAA1D")
+        
+        gg <- ggnet2(bip, label = TRUE, color = "mode", palette = col, edge.size = 'weights') +
+            theme(legend.position = 'none')
+        
+        gg
         
     })
     
-    
-    
-    
-    
     plot_gg <- eventReactive(c(
+        input$action_type,
         input$net_type,
         input$bees,
         input$plants
@@ -84,7 +120,12 @@ shinyServer(function(input, output, session) {
         
         nice_loc <- input$region
         
-        fil_db <- db[db$locs == nice_loc,]
+        if(nice_loc == "All"){
+            fil_db <- db
+        }else{
+            fil_db <- db[db$locs == nice_loc,]
+        }
+        
         
         
         if(!is.null(selected_sp)){
@@ -139,14 +180,22 @@ shinyServer(function(input, output, session) {
 
     # Make the plot
     output$plot1 <- renderPlot({
-        
-        plot_gg()
+        if(input$action_type == "Build Network"){
+           plot_gg()
+        }else{
+            maxi_plants()
+        }
         })
    
     
     sp_name_plot <- eventReactive(input$plot_click$x,{
         
-        ggp <- plot_gg()
+        if(input$action_type == "Build Network"){
+            ggp <-plot_gg()
+        }else{
+            ggp <-maxi_plants()
+        }
+    
         p_x <- input$plot_click$x
         p_y <- input$plot_click$y
         min_x <- min(all_dist <- Rfast::dista(matrix(c(x = p_x, y = p_y), nrow =1), as.matrix(ggp$data[,c("x", "y")])))
