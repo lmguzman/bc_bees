@@ -15,7 +15,7 @@ shinyUI(dashboardPage(
     dashboardSidebar(
             selectInput(inputId = 'region',
                         label = 'Region',
-                        choices = nice_locations),
+                        choices = c("All", nice_locations)),
             selectInput(inputId = 'action_type',
                         label = 'What do you want to do?',
                         choices = c("", "Build Network", "Get plants")),
@@ -41,8 +41,8 @@ shinyUI(dashboardPage(
                              selectInput(inputId = 'maximizer',
                                          label = 'Maximize:',
                                          choices = c("Pollinator abundance", 'Pollinator diversity')),
-                             numericInput("n_plants", "Number of plants:", 10, min = 1, max = 100),
-                             actionButton("go", "Go"),)
+                             numericInput("n_plants", "Number of plants:", 10, min = 2, max = 100),
+                             actionButton("go", "Go"))
         ),
 
         # Show a plot of the generated distribution
@@ -51,7 +51,7 @@ shinyUI(dashboardPage(
                 plotOutput("plot1", click= "plot_click")),
             fluidRow(
                 verbatimTextOutput("info"),
-                htmlOutput("mySite")),
+                htmlOutput("mySite"))
         )
     )
 )
