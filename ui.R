@@ -15,7 +15,7 @@ shinyUI(dashboardPage(
     dashboardSidebar(
             selectInput(inputId = 'region',
                         label = 'Region',
-                        choices = nice_locations),
+                        choices = c("All", nice_locations)),
             selectInput(inputId = 'action_type',
                         label = 'What do you want to do?',
                         choices = c("", "Build Network", "Get plants")),
@@ -41,7 +41,11 @@ shinyUI(dashboardPage(
                              selectInput(inputId = 'maximizer',
                                          label = 'Maximize:',
                                          choices = c("Pollinator abundance", 'Pollinator diversity')),
+<<<<<<< HEAD
                              numericInput("n_plants", "Number of plants:", 10, min = 1, max = 100),
+=======
+                             numericInput("n_plants", "Number of plants:", 10, min = 2, max = 100),
+>>>>>>> refs/remotes/origin/master
                              actionButton("go", "Go"))
         ),
 
