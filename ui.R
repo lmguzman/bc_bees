@@ -42,7 +42,7 @@ shinyUI(dashboardPage(
                                          label = 'Maximize:',
                                          choices = c("Pollinator abundance", 'Pollinator diversity')),
                              numericInput("n_plants", "Number of plants:", 10, min = 1, max = 100),
-                             actionButton("go", "Go"),)
+                             actionButton("go", "Go"))
         ),
 
         # Show a plot of the generated distribution
