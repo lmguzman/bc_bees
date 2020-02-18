@@ -54,6 +54,20 @@ shinyServer(function(input, output, session) {
         
     })
     
+    maxi_plants <- eventReactive(input$go, {
+        input$maximizer
+        input$nplants
+        
+        nice_loc <- input$region
+        
+        fil_db <- db[db$locs == nice_loc,]
+        
+    })
+    
+    
+    
+    
+    
     plot_gg <- eventReactive(c(
         input$net_type,
         input$bees,
