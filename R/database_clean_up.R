@@ -99,9 +99,8 @@ dplyr::filter(db, Location_Desc == "Jefferson Farm, nr. Jefferson")
 
 library(stringr)
 
-locs[str_detect(locs, "Cowichan|Mesachie|Tzuhalem")] <- "Cowichan"
 
-locs[str_detect(locs, "Victoria|Saanich|Metchosin|Oak Bay|Esquimalt")] <- "Victoria Area"
+locs[str_detect(locs, "Victoria|Saanich|Metchosin|Oak Bay|Esquimalt|Cowichan|Mesachie|Tzuhalem")] <- "Vancouver Island"
 
 locs[str_detect(locs, "Vancouver|North Vancouver")] <- "Vancouver"
 
@@ -111,11 +110,9 @@ locs[str_detect(locs, "Abbotsford|Langley|Maple Ridge|Pitt Meadows|Coquitlam|Sur
 
 locs[str_detect(locs, "Bella Bella")] <- "Campbell Island"
 
-locs[str_detect(locs, "Okanagan")] <- "Okanagan"
+locs[str_detect(locs, "Haynes|White Lake|Mt. Oliver|Kennedy Bench|Okanagan")] <- "Okanagan"
 
-locs[str_detect(locs, "Haynes|White Lake|Mt. Oliver|Kennedy Bench|Jefferson")] <- "Osoyoos"
-
-locs[str_detect(locs, "Rocky Prairie|Table Rock|Lacamas Prairie|Eugene|Finley|Sutherlin|Stayton|Camas|Mima|North Bank")] <- "US"
+locs[str_detect(locs, "Rocky Prairie|Table Rock|Lacamas Prairie|Eugene|Finley|Sutherlin|Stayton|Camas|Mima|North Bank|Jefferson")] <- "US"
 
 locs[str_detect(locs, "Tsawwassen")] <- "Tsawwassen"
 
