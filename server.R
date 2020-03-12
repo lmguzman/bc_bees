@@ -6,13 +6,51 @@ library(stringr)
 #library(plotly)
 library(network)
 library(tidyr)
+library(readr)
+library(readxl)
+library(rgdal)
+library(leaflet)
+library(sp)
+library(ggplot2)
+library(ggmap)
+library(cartography)
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
 
+#reading in map data
+sections <- readOGR("data/ERC_ECOSECTIONS_SP/ERC_ECOSEC_polygon.shp", stringsAsFactors = F)
+
+sections@data <- sections@data %>%
+  dplyr::rename("ecosection_cd" = ECOSEC_CD,
+                "ecosection_nm" = ECOSEC_NM)
+
+target2 <- c("SGI", "NAL", "LIM", "FRL", "OKR", "SOB", "NOB")
+ecosec <- subset(sections, ecosection_cd %in% target2)
+
+
+ecosec_data <- ecosec@data
+
+ecosec@data <- ecosec@data %>%
+  select(ecosection_cd) %>%
+  mutate(ecosection_cd = factor(ecosection_cd))
+
+ecosec_map <- spTransform(ecosec, CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+
+eco_map <- leaflet(data = ecosec_map)
+
+pal <- c("#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17")
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
+  output$plot_region <- renderLeaflet({
 
+    eco_map %>%
+    setView(lng = -122.5, lat = 49.2, zoom = 6) %>%
+    addProviderTiles("CartoDB.Positron") %>%
+    addPolygons(color = pal,
+                popup = paste0("<strong>Ecosection: </strong>", ecosec_data$ecosection_nm))
+
+    })
     observe({
         
         # Can use character(0) to remove all choices

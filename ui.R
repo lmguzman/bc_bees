@@ -12,7 +12,8 @@ shinyUI(dashboardPage(
     dashboardHeader(title= "Pollinators of \nBritish Columbia", titleWidth = 300),
 
     # Sidebar with a slider input for number of bins
-    dashboardSidebar(
+    dashboardSidebar(width = 400,
+            leafletOutput("plot_region", height = 200),
             selectInput(inputId = 'region',
                         label = 'Region',
                         choices = c("All", nice_locations)),

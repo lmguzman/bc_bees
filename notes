@@ -9,12 +9,10 @@ Oakanagan - Ponderosa Pine
 What is bombus occidentalis using 
 
 
-Breaking it into native vs not. (or to colour to indicate)
-
 For sorting
 we want to plant shrubs or we can't do anything woody
-Woody vs forbs 
 
+<<<<<<< HEAD
 Break up the alphabetical list into bees, wasps, flies
 
 
@@ -26,3 +24,14 @@ Break up the alphabetical list into bees, wasps, flies
 - blooming at the same time as blueberry has been shown to be food for diversity of forage
   - increase diversity of 
 
+=======
+Filter by number of interactions
+
+Dataframe task: add biogeoclimatic regions, add plant Nat Vs Inv, add plant type, pollinators stating B, W, or F
+   Breaking it into native vs not. (or to colour to indicate)
+   Woody vs forbs 
+   Break up the alphabetical list into bees, wasps, flies
+   BC biogeoclimatic zone designations
+   
+   
+>>>>>>> origin/master

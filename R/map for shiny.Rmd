@@ -1,0 +1,109 @@
+---
+title: "Maps for Shiny"
+author: "T.Kelly"
+date: '2020-03-09'
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(readr)
+library(readxl)
+library(rgdal)
+library(shiny)
+library(leaflet)
+library(dplyr)
+library(sp)
+library(ggplot2)
+library(ggmap)
+library(plyr)
+library(cartography)
+```
+
+```{r}
+#read in the two types of files (i have these on my computer)
+sections <- readOGR("data/ERC_ECOSECTIONS_SP/ERC_ECOSEC_polygon.shp", stringsAsFactors = F)
+
+sections@data <- sections@data %>%
+  dplyr::rename("ecosection_cd" = ECOSEC_CD, "ecosection_nm" = ECOSEC_NM)
+
+target2 <- c("SGI", "NAL", "LIM", "FRL", "OKR", "SOB", "NOB")
+ecosec <- subset(sections, ecosection_cd %in% target2)
+plot(ecosec, axes = T)
+
+ecosec_data <- ecosec@data
+
+ecosec@data <- ecosec@data %>%
+  select(ecosection_cd) %>%
+  mutate(ecosection_cd = factor(ecosection_cd))
+
+#getting set up for ggplot
+ecosec_map <- spTransform(ecosec, CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+
+eco_map <- leaflet(data = ecosec_map)
+
+
+pal <- c("#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17")
+
+eco_map %>%
+  setView(lng = -122.5, lat = 49.2, zoom = 6.5) %>%
+  addProviderTiles("CartoDB.Positron") %>% 
+  addPolygons(color = pal, 
+              popup = paste0("<strong>Ecosection: </strong>", ecosec_data$ecosection_nm))
+
+```
+
+
+Example
+```{r}
+leaflet() %>% 
+  setView(lng = -122.2705383, lat = 37.8698807, zoom = 11) %>%
+  addTiles()
+
+quakes <- read_csv("https://earthquake.usgs.gov/fdsnws/event/1/query?starttime=1960-01-01T00:00:00&minmagnitude=6&format=csv&latitude=39.828175&longitude=-98.5795&maxradiuskm=6000&orderby=magnitude")
+
+seismic <- readOGR("/Users/tylerkelly/Dropbox/R projects/2019 Guzman Collab/week13/seismic/seismic.shp")
+
+summary(seismic)
+
+# convert to factor/categorical variable
+seismic@data <- seismic@data %>%
+  mutate(ValueRange = factor(ValueRange, levels = c("< 1","1 - 2","2 - 5","5 - 10", "10 - 12")))
+
+seismic_map <- leaflet(data = seismic)
+
+# set color palette
+pal <- colorFactor("Reds", seismic$ValueRange)
+
+# plot map
+seismic_map %>%
+  setView(lng = -98.5795, lat = 39.828175, zoom = 4) %>%
+  addProviderTiles("CartoDB.Positron") %>% 
+  addPolygons(
+    stroke = FALSE,
+    fillOpacity = 0.7,
+    smoothFactor = 0.1,
+    color = ~pal(ValueRange)
+  ) %>%
+  # add historical earthquakes
+  addCircles(
+    data = quakes, 
+    radius = sqrt(10^quakes$mag)*30, 
+    color = "#000000",
+    weight = 0.2,
+    fillColor ="#ffffff",
+    fillOpacity = 0.5,
+    popup = paste0("<strong>Magnitude: </strong>", quakes$mag, "</br>",
+                   "<strong>Date: </strong>", format(as.Date(quakes$time), "%b %d, %Y"))
+  ) %>%
+  # add legend
+  addLegend(
+    "bottomright", pal = pal, values = ~ValueRange,
+    title = "annual % risk of damaging quake",
+    opacity = 0.7,
+    labels = labels
+  )
+```
+
+
