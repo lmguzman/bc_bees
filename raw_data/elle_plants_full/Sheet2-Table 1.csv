@@ -1,0 +1,63 @@
+variable,shortname,description,description2,
+Accepted Symbol,usda_symb,USDA symbol?,,
+PLANTS Floristic Area,usda_flor,USDA floristic area?,,
+Scientific Name,sciname,scientific name,,
+category,subdivision,"angiosperm (Spermatophytina), gymnosperm (Pteridophytina)",,
+Family,family,plant family,,
+PL,pl,"0=checked, but had no information, 1=got data from The Flora of the Great Plains",,
+GL,gl,"0=checked, but had no information, 1=got data from The New Britton and Brown Illustrated Flora of the Northeastern United States and Adjacent Canada, by Henry A. Gleason",,
+NA,na,"0=checked, but had no information, 1=got data from Flora of North America (published, or online)",,
+BC,bc,"0=checked, but had no information, 1=got data from eith E-Flora BC: Electronic Atlas of the Plants of British Columbia OR Illustrated Flora of British Columbia",,
+Pollination Mechanism,poll_mech,"animal, wind, water",,
+Life form,life_form,"t = tree, s = shrub, h = herb, f = fern, g = grass/sedge/rush, V = vine, OR w = woody, h = herbaceous",,
+symmetry,symm,"radial (r), bilateral (b)",,
+color,flow_col,actual flower color written in the source,,
+Colour Category,flow_col_cat,"PR = Pink-Red, R = True Red, W = White, Y = Yellow-Orange, P = Pink (incl. Pale pink, purple-pink), B = Purple-Blue
+G = Greenish/Brown/Burgundy, OR = Orange-red, NA=not applicable-too many colors to categorize",,
+Multicoloured,multicol,1: multicolour; 0: single colour,,
+flowersize minimum (mm),flowsize_min,"minimum flower size (mm), from range originally",,
+flowersize maximum (mm),flowsize_max,"maximum flower size (mm), from range originally",,
+flowersize midoint (mm),flowsize_mid,midpoint flower size (mm) (only midpoint given in literature),,
+Measurement type,meastype,"Lowercase: L = length of corolla
+D = diameter of corolla (lowercase)
+P2 = 2X petal length or corolla lobe length
+O = other (see notes); For Asteraceae ONLY, in caps:
+R= ray flower
+D= disc flower
+  or
+P= pistillate flower
+S= staminate
+B= bisexual
+  Or
+F= fertile
+N= neuter (sterile)",,
+secondary flowersize minimum (mm),flowsize_min_add,"minimum flower size (mm), from range originally",,
+secondary flowersize maximum (mm),flowsize_max_add,"maximum flower size (mm), from range originally",,
+secondary flowersize midoint (mm),flowsize_mid_add,midpoint flower size (mm) (only midpoint given in literature),,
+Measurement type (secondary),meastype_add,"Lowercase: L = length of corolla
+D = diameter of corolla (lowercase)
+P2 = 2X petal length or corolla lobe length
+O = other (see notes); For Asteraceae ONLY, in caps:
+R= ray flower
+D= disc flower
+  or
+P= pistillate flower
+S= staminate
+B= bisexual
+  Or
+F= fertile
+N= neuter (sterile)",,
+breeding,breeding,p = perfect; m = monoecious; d = dioecious; gm =gynomonoecious; gd = gynodioecious; am = andromonecious; ad = androdiecious; o = other (add in notes),,
+Inflorescence size,inflor_size,number of flowers per inflorescence,,
+Inflorescence units,inflor_units,"If nothing given, is ""number of flowers""",,
+SI,si,blank column,,
+PL,pl,blank column,,
+Life cycle,life_cycle,"annual, biennial, perennial",,
+Parity,parity,"semelparous, iteroparous",,
+Inflorescence type,inflor_type,"racemose, spicate, paniculate, cymose, umbellate, or with flowers single or paired in leaf axils, etc.....",,
+NOTES,notes,notes,,
+Sources:floraltraits,source_fl,source for floral traits,,
+Sources: breeding,source_br,source for breeding system,,
+Sources:inflorescence,source_inf,source for inflorescence data,,
+Sources: SI,source_si,source for self-incompatibility,,
+Sources: PL,source_pl,source for pollen limitation,,

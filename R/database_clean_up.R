@@ -129,15 +129,51 @@ write.csv(db_lo, "data/site_net_locs.csv", row.names = FALSE)
 
 ################ making sure it is species ########
 
+## filter species that have less than 1 obsevation for plants and less than 5 observations for bees
+
 db <- read.csv("data/site_net_locs.csv")
 
-db2 <- db %>% 
+bee_traits <- read.csv("raw_data/elle_insects.csv")
+
+unique(bee_traits$insect_guild)
+
+plant_traits <- read.csv("raw_data/elle_plants_full/elle_plants_full-Table 1.csv")
+
+bee_names <- read.csv("raw_data/common_names_pol.csv")
+
+db_int <- db %>% 
   filter(!(Species == "")) %>% 
   filter(!str_detect(Species, "sp.")) %>% 
-  unite(col = "bee_sp", GenusName, Species, sep = "\n") %>% 
+  unite(col = "bee_sp", GenusName, Species, sep = " ") %>% 
   rename(plant_sp = Species.Name) %>% 
-  mutate(plant_sp = str_replace(plant_sp, " ", "\n")) 
+  filter(!bee_sp == "Hemiptera misc.")
+
+db_int %>% 
+  filter(str_detect(bee_sp, "Stelis"))
+
+bees_great <- db_int %>% 
+  group_by(bee_sp) %>% 
+  summarise(n = n()) %>% 
+  filter(n >5)
+
+unique(str_extract(bees_great$bee_sp, "\\w+")) %>% View()
+
+bee_common <- sci2comm(unique(str_extract(bees_great$bee_sp, "\\w+")))
+
+plant_great <- db_int %>% 
+  group_by(plant_sp) %>% 
+  summarise(n = n()) %>% 
+  filter(n >1)
+
+library(taxize)
+
+
+
+
+#db2 
+#  mutate(plant_sp = str_replace(plant_sp, " ", "\n"), bee_sp = str_replace(bee_sp, " ", "\n")) 
   
+
 
 write.csv(db2, "data/site_net_loc_fil.csv", row.names = FALSE)
 
@@ -148,22 +184,8 @@ library(purrr)
 db <- read.csv("data/site_net_loc_fil.csv")
 
 sps_loc <- db %>%  
-  select(bee_sp, plant_sp, locs) %>% 
   mutate(bee_sp = str_replace(bee_sp, "\n", " "), plant_sp = str_replace(plant_sp, "\n", " "))
 
-sort(unique(sps_loc$bee_sp))
 
-###### getting wikipedia articles for species ###
 
-library(WikipediaR)
-
-db <- read.csv("data/site_net_loc_fil.csv")
-
-bee_sp <- str_replace(unique(db$bee_sp), "\n", " ")
-
-links <- links("Bombus huntii")
-
-links$page
-
-links$links
 
