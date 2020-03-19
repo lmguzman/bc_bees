@@ -3,7 +3,7 @@ library(shinydashboard)
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
 
-nice_locations <- unique(db$locs)
+nice_locations <- unique(db$ecosection_nm)
 
 # Define UI for application that draws a histogram
 shinyUI(dashboardPage(
@@ -12,11 +12,14 @@ shinyUI(dashboardPage(
     dashboardHeader(title= "Pollinators of \nBritish Columbia", titleWidth = 300),
 
     # Sidebar with a slider input for number of bins
-    dashboardSidebar(width = 400,
-            leafletOutput("plot_region", height = 200),
+    dashboardSidebar(width = 450,
+            leafletOutput("plot_region", height = 300),
             selectInput(inputId = 'region',
                         label = 'Region',
                         choices = c("All", nice_locations)),
+            selectInput(inputId = "name_type",
+                        label = "Do you want to use:",
+                        choices = c("Scientific names", "Common names")),
             selectInput(inputId = 'action_type',
                         label = 'What do you want to do?',
                         choices = c("", "Build Network", "Get plants")),
@@ -42,6 +45,12 @@ shinyUI(dashboardPage(
                              selectInput(inputId = 'maximizer',
                                          label = 'Maximize:',
                                          choices = c("Pollinator abundance", 'Pollinator diversity')),
+                             checkboxGroupInput(inputId = "native",
+                                                label = 'Use native plants only?',
+                                                choices = c("Native", "Non-Native")),
+                             checkboxGroupInput(inputId = "shrub",
+                                                label = 'Which types of plants do you want to use?',
+                                                choices = c("Herb","Shrub","Vine","Tree","Various")),
                              numericInput("n_plants", "Number of plants:", 10, min = 2, max = 100),
                              actionButton("go", "Go"))
         ),

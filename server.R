@@ -14,6 +14,7 @@ library(sp)
 library(ggplot2)
 library(ggmap)
 library(cartography)
+library(cowplot)
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
 
@@ -24,7 +25,7 @@ sections@data <- sections@data %>%
   dplyr::rename("ecosection_cd" = ECOSEC_CD,
                 "ecosection_nm" = ECOSEC_NM)
 
-target2 <- c("SGI", "NAL", "LIM", "FRL", "OKR", "SOB", "NOB")
+target2 <- c("SGI", "NAL", "LIM", "FRL", "OKR", "SOB", "SPR", "LIM", "HEL")
 ecosec <- subset(sections, ecosection_cd %in% target2)
 
 
@@ -45,7 +46,7 @@ shinyServer(function(input, output, session) {
   output$plot_region <- renderLeaflet({
 
     eco_map %>%
-    setView(lng = -122.5, lat = 49.2, zoom = 6) %>%
+    setView(lng = -123.8, lat = 49.8, zoom = 5.5) %>%
     addProviderTiles("CartoDB.Positron") %>%
     addPolygons(color = pal,
                 popup = paste0("<strong>Ecosection: </strong>", ecosec_data$ecosection_nm))
@@ -59,7 +60,14 @@ shinyServer(function(input, output, session) {
         if(nice_loc == "All"){
             fil_db <- db
         }else{
-            fil_db <- db[db$locs == nice_loc,]
+            fil_db <- db[db$ecosection_nm == nice_loc,]
+        }
+        
+        names_to_use <- input$name_type
+        
+        if(names_to_use == "Common names"){
+          fil_db$bee_sp <- fil_db$bee_common
+          fil_db$plant_sp <- fil_db$plant_common
         }
 
         type_net <- input$net_type
@@ -105,7 +113,30 @@ shinyServer(function(input, output, session) {
         if(nice_loc == "All"){
             fil_db <- db
         }else{
-            fil_db <- db[db$locs == nice_loc,]
+            fil_db <- db[db$ecosection_nm == nice_loc,]
+        }
+        
+        names_to_use <- input$name_type
+        
+        if(names_to_use == "Common names"){
+          fil_db$bee_sp <- fil_db$bee_common
+          fil_db$plant_sp <- fil_db$plant_common
+        }
+        
+        plant_native <- if(all(input$native == "Native")){
+          c("native", "both")
+        }else if(all(input$native == "Non-Native")){
+          c("non-native", "both")
+        }else{
+          c("native", "non-native", "both")
+        }
+        
+        if(!is.null(plant_native)){
+          fil_db <- fil_db[fil_db$plant_native %in% plant_native,]
+        }
+        
+        if(!is.null(input$shrub)){
+          fil_db <- fil_db[fil_db$plant_life_form %in% input$shrub,]
         }
         
         if(input$maximizer == "Pollinator abundance"){
@@ -122,30 +153,23 @@ shinyServer(function(input, output, session) {
         
         fil2_db <- fil_db[fil_db$plant_sp %in% pl_sp,]
         
-        bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
-            mutate(Freq = Freq*0.1) %>% 
-            spread(key = bee_sp, value = Freq) %>% 
-            tibble::column_to_rownames("plant_sp")  
+        plant_order <- fil2_db %>% 
+          dplyr::count(plant_sp) %>%
+          arrange(n)
         
-        bip <- network(bip_table,
-                       matrix.type = "bipartite",
-                       ignore.eval = FALSE,
-                       names.eval = "weights")
-        
-        col = c("actor" = "#50C878", "event" = "#FFAA1D")
-        
-        gg <- ggnet2(bip, label = TRUE, color = "mode", palette = col, edge.size = 'weights') +
-            theme(legend.position = 'none')
-        
-        gg
-        
+        max_plot <- ggplot(fil2_db) + geom_bar(aes(x = plant_sp, fill = bee_guild)) + coord_flip() +
+          theme_cowplot() + scale_fill_viridis_d(name = "Type of \n pollinator") +
+          xlab("") + ylab("Number of recorded observations") + scale_x_discrete(limits = plant_order$plant_sp) 
+         
+        max_plot
     })
     
     plot_gg <- eventReactive(c(
         input$action_type,
         input$net_type,
         input$bees,
-        input$plants
+        input$plants,
+        input$name_type
     ),{
         
         type_net <- input$net_type
@@ -161,10 +185,14 @@ shinyServer(function(input, output, session) {
         if(nice_loc == "All"){
             fil_db <- db
         }else{
-            fil_db <- db[db$locs == nice_loc,]
+            fil_db <- db[db$ecosection_nm == nice_loc,]
         }
+        names_to_use <- input$name_type
         
-        
+        if(names_to_use == "Common names"){
+          fil_db$bee_sp <- fil_db$bee_common
+          fil_db$plant_sp <- fil_db$plant_common
+        }
         
         if(!is.null(selected_sp)){
             
@@ -199,13 +227,21 @@ shinyServer(function(input, output, session) {
                     spread(key = bee_sp, value = Freq) %>% 
                     tibble::column_to_rownames("plant_sp")  
             }
+           
+          
+          #net %v% "phono" = ifelse(letters[1:10] %in% c("a", "e", "i"), "vowel", "consonant")
+          
+          #data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
+            #left_join(select(fil2_db, plant_sp, plant_native)) %>% 
+            #unique()
+          
             bip <- network(bip_table,
                            matrix.type = "bipartite",
                            ignore.eval = FALSE,
                            names.eval = "weights")
             
             col = c("actor" = "#50C878", "event" = "#FFAA1D")
-            
+          
             gg <- ggnet2(bip, label = TRUE, color = "mode", palette = col, edge.size = 'weights') +
                 theme(legend.position = 'none')
             
@@ -230,29 +266,34 @@ shinyServer(function(input, output, session) {
         
         if(input$action_type == "Build Network"){
             ggp <-plot_gg()
+            p_x <- input$plot_click$x
+            p_y <- input$plot_click$y
+            min_x <- min(all_dist <- Rfast::dista(matrix(c(x = p_x, y = p_y), nrow =1), as.matrix(ggp$data[,c("x", "y")])))
+            sp_name <- ggp$data[which(all_dist == min(all_dist)),"label"]
+            
+            sp_name
         }else{
-            ggp <-maxi_plants()
+            NULL
         }
-    
-        p_x <- input$plot_click$x
-        p_y <- input$plot_click$y
-        min_x <- min(all_dist <- Rfast::dista(matrix(c(x = p_x, y = p_y), nrow =1), as.matrix(ggp$data[,c("x", "y")])))
-        sp_name <- ggp$data[which(all_dist == min(all_dist)),"label"]
-        
-        sp_name
+
     })
     
     output$info <- renderText({
-
+      
+      if(input$action_type == "Build Network"){
         if (is.null(input$plot_click$x)){
-            "Click on any species to see information about it."
+          "Click on any species to see information about it."
         }else{
-            sp_name <- sp_name_plot()
-            sp_name2 <- str_replace(sp_name, "\n", " ")
-            paste("selected species=",sp_name2, "\n")
+          sp_name <- sp_name_plot()
+          sp_name2 <- str_replace(sp_name, "\n", " ")
+          paste("selected species=",sp_name2, "\n")
         }
+      }
+        
     })
     output$mySite <- renderUI({
+      
+      if(input$action_type == "Build Network"){
         if (is.null(input$plot_click$x)){
             " "
         }else{
@@ -263,6 +304,7 @@ shinyServer(function(input, output, session) {
             url <- a(sp_name2, href=website)
             tagList("Wikipedia link:", url)
         }
+      }
     })
 
     

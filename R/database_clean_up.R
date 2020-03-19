@@ -9,7 +9,8 @@ library(viridis)
 library(measurements)
 library(PBSmapping)
 library(cowplot)
-
+library(taxize)
+library(purrr)
 
 tbl_PlantSpecies <-read.csv("raw_data/tbl_PlantSpecies.csv")
 
@@ -92,34 +93,10 @@ write.csv(plant_bee_table, "data/site_net.csv", row.names = FALSE)
 
 db <- read.csv("data/site_net.csv", stringsAsFactors = FALSE)
 
-locs <- unique(db$Location_Desc)
-
-head(db)
-dplyr::filter(db, Location_Desc == "Jefferson Farm, nr. Jefferson")
-
-library(stringr)
-
-
-locs[str_detect(locs, "Victoria|Saanich|Metchosin|Oak Bay|Esquimalt|Cowichan|Mesachie|Tzuhalem")] <- "Vancouver Island"
-
-locs[str_detect(locs, "Vancouver|North Vancouver")] <- "Vancouver"
-
-locs[str_detect(locs, "Richmond|Delta|Bates Farm")] <- "Richmond/Delta"
-
-locs[str_detect(locs, "Abbotsford|Langley|Maple Ridge|Pitt Meadows|Coquitlam|Surrey")] <- "Lower Mainland"
-
-locs[str_detect(locs, "Bella Bella")] <- "Campbell Island"
-
-locs[str_detect(locs, "Haynes|White Lake|Mt. Oliver|Kennedy Bench|Okanagan")] <- "Okanagan"
-
-locs[str_detect(locs, "Rocky Prairie|Table Rock|Lacamas Prairie|Eugene|Finley|Sutherlin|Stayton|Camas|Mima|North Bank|Jefferson")] <- "US"
-
-locs[str_detect(locs, "Tsawwassen")] <- "Tsawwassen"
-
-str_detect(locs, "Bella Bella")
+regions <- read.csv("data/new_regions.csv")
 
 db_lo <- db %>% 
-  left_join(data.frame(locs, Location_Desc= unique(db$Location_Desc)))
+  left_join(regions)
 
 write.csv(db_lo, "data/site_net_locs.csv", row.names = FALSE)
 
@@ -128,61 +105,91 @@ write.csv(db_lo, "data/site_net_locs.csv", row.names = FALSE)
 
 ## filter species that have less than 1 obsevation for plants and less than 5 observations for bees
 
-db <- read.csv("data/site_net_locs.csv")
+db <- read.csv("data/site_net_locs.csv", stringsAsFactors = FALSE)
 
-bee_traits <- read.csv("raw_data/elle_insects.csv")
+bee_traits <- read.csv("raw_data/elle_insects.csv", stringsAsFactors = FALSE)
 
-unique(bee_traits$insect_guild)
+plant_traits <- read.csv("raw_data/elle_plants_full/elle_plants_full-Table 1.csv", stringsAsFactors = FALSE) %>% 
+  filter(!plant_sp == "Incidental Collection") %>% 
+  filter(!plant_sp == "Miscellaneous white flower") %>% 
+  filter(!plant_sp == "Mixed species") %>% 
+  filter(!str_detect(plant_sp, "Nest")) %>% 
+  filter(!plant_sp == "net") %>% 
+  mutate(plant_sp = ifelse(plant_sp == "Spirea douglasii ssp. Douglasii", "Spiraea douglasii", plant_sp)) %>% 
+  mutate(plant_sp = ifelse(plant_sp == "Symphoricarpus albus", "Symphoricarpos albus", plant_sp)) %>% 
+  mutate(plant_sp = ifelse(plant_sp == "Syringia", "Syringa", plant_sp)) %>% 
+  mutate(plant_sp = ifelse(plant_sp == "Alyssum", "Lobularia", plant_sp)) %>% 
+  mutate(plant_sp = ifelse(plant_sp == "Convulvulus arvensis", "Convolvulus arvensis", plant_sp)) %>% 
+  mutate(plant_sp = ifelse(plant_sp == "Craetagus douglasii", "Crataegus douglasii", plant_sp)) 
 
-plant_traits <- read.csv("raw_data/elle_plants_full/elle_plants_full-Table 1.csv")
+bee_names <- read.csv("raw_data/common_names_pol.csv", stringsAsFactors = FALSE)
 
-bee_names <- read.csv("raw_data/common_names_pol.csv")
+plant_names <- read.csv("raw_data/common_names_plants.csv", stringsAsFactors = FALSE)
 
 db_int <- db %>% 
   filter(!(Species == "")) %>% 
   filter(!str_detect(Species, "sp.")) %>% 
   unite(col = "bee_sp", GenusName, Species, sep = " ") %>% 
-  rename(plant_sp = Species.Name) %>% 
-  filter(!bee_sp == "Hemiptera misc.")
-
-db_int %>% 
-  filter(str_detect(bee_sp, "Stelis"))
+  dplyr::rename(plant_sp = Species.Name) %>% 
+  filter(!bee_sp == "Hemiptera misc.") %>% 
+  filter(!plant_sp == "Incidental Collection") %>% 
+  filter(!plant_sp == "Miscellaneous white flower") %>% 
+  filter(!plant_sp == "Mixed species") %>% 
+  filter(!str_detect(plant_sp, "Nest")) %>% 
+  filter(!plant_sp == "net") %>% 
+  mutate(plant_sp = ifelse(plant_sp == "Spirea douglasii ssp. Douglasii", "Spiraea douglasii", plant_sp)) %>% 
+  mutate(plant_sp = ifelse(plant_sp == "Symphoricarpus albus", "Symphoricarpos albus", plant_sp)) %>% 
+  mutate(plant_sp = ifelse(plant_sp == "Syringia", "Syringa", plant_sp)) %>% 
+  mutate(plant_sp = ifelse(plant_sp == "Alyssum", "Lobularia", plant_sp)) %>% 
+  mutate(plant_sp = ifelse(plant_sp == "Convulvulus arvensis", "Convolvulus arvensis", plant_sp)) %>% 
+  mutate(plant_sp = ifelse(plant_sp == "Craetagus douglasii", "Crataegus douglasii", plant_sp)) 
 
 bees_great <- db_int %>% 
   group_by(bee_sp) %>% 
-  summarise(n = n()) %>% 
+  dplyr::summarise(n = n()) %>% 
   filter(n >5)
 
-unique(str_extract(bees_great$bee_sp, "\\w+")) %>% View()
-
-bee_common <- sci2comm(unique(str_extract(bees_great$bee_sp, "\\w+")))
+bee_name_clean <- bees_great %>% 
+  mutate(bee_gen = str_extract(bee_sp, "\\w+")) %>% 
+  left_join(bee_names, by = c("bee_gen" = "Genus")) %>% 
+  left_join(select(bee_traits, insect_sp, insect_order, social, nest_location, larval_diet, insect_guild),
+            by = c("bee_sp" = "insect_sp")) %>% 
+  dplyr::select(-n, -bee_gen) %>% 
+  dplyr::rename(bee_common = Common.name, bee_order = insect_order, bee_social = social, bee_nest_location = nest_location,
+         bee_diet = larval_diet, bee_guild = insect_guild)
 
 plant_great <- db_int %>% 
   group_by(plant_sp) %>% 
-  summarise(n = n()) %>% 
-  filter(n >1)
+  dplyr::summarise(n = n()) %>% 
+  filter(n >5)
 
-library(taxize)
+plant_name_clean <- plant_great %>% 
+  mutate(plant_gen = str_extract(plant_sp, "\\w+")) %>% 
+  left_join(plant_names, by = c("plant_gen" = "plant_sp")) %>% 
+  left_join(plant_traits, by = c("plant_sp")) %>%
+  dplyr::select(plant_sp, plant_common = common.name, plant_order, plant_family, plant_native = native_inv, 
+         plant_life_form = Life.form) 
 
 
-
-
-#db2 
-#  mutate(plant_sp = str_replace(plant_sp, " ", "\n"), bee_sp = str_replace(bee_sp, " ", "\n")) 
-  
+db2 <- db_int %>% 
+  filter(bee_sp %in% bees_great$bee_sp) %>% 
+  filter(plant_sp %in% plant_great$plant_sp) %>% 
+  left_join(bee_name_clean) %>% 
+  left_join(plant_name_clean) %>% 
+  select(-BeeID, -SpID, -PlantSpeciesID, -BeeGenusID, -Species.CODE) %>% 
+  mutate(plant_sp = str_replace(plant_sp, " ", "\n"), bee_sp = str_replace(bee_sp, " ", "\n")) %>% 
+  mutate(plant_native = ifelse(plant_native == "native*", "non-native", plant_native)) %>% 
+  mutate(plant_native =ifelse(is.na(plant_native), 'both', plant_native)) %>% 
+  mutate(plant_life_form = str_to_sentence(plant_life_form)) %>% 
+  mutate(plant_life_form = ifelse(plant_life_form == "Woody vine", "Vine", plant_life_form)) %>% 
+  mutate(plant_life_form = ifelse(plant_life_form == "Varies", "Various", plant_life_form)) %>% 
+  mutate(plant_life_form = ifelse(plant_life_form == "Shrub or tree", "Shrub", plant_life_form)) %>% 
+  mutate(plant_life_form = ifelse(plant_life_form == "Herb to shrub", "Shrub", plant_life_form)) %>% 
+  mutate(plant_life_form =ifelse(is.na(plant_life_form), 'Herb', plant_life_form))
 
 
 write.csv(db2, "data/site_net_loc_fil.csv", row.names = FALSE)
 
-#########cleaning up names #####
 
-library(purrr)
-
-db <- read.csv("data/site_net_loc_fil.csv")
-
-sps_loc <- db %>%  
-  mutate(bee_sp = str_replace(bee_sp, "\n", " "), plant_sp = str_replace(plant_sp, "\n", " "))
-
-
-
+##### check native 
 

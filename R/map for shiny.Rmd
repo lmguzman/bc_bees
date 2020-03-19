@@ -7,6 +7,9 @@ editor_options:
   chunk_output_type: console
 ---
 
+Ecosection website: https://catalogue.data.gov.bc.ca/dataset/ecosections-ecoregion-ecosystem-classification-of-british-columbia
+
+
 ```{r}
 library(readr)
 library(readxl)
@@ -28,7 +31,7 @@ sections <- readOGR("data/ERC_ECOSECTIONS_SP/ERC_ECOSEC_polygon.shp", stringsAsF
 sections@data <- sections@data %>%
   dplyr::rename("ecosection_cd" = ECOSEC_CD, "ecosection_nm" = ECOSEC_NM)
 
-target2 <- c("SGI", "NAL", "LIM", "FRL", "OKR", "SOB", "NOB")
+target2 <- c("SGI", "NAL", "LIM", "FRL", "OKR", "SOB", "SPR", "LIM", "HEL")
 ecosec <- subset(sections, ecosection_cd %in% target2)
 plot(ecosec, axes = T)
 
@@ -39,6 +42,7 @@ ecosec@data <- ecosec@data %>%
   mutate(ecosection_cd = factor(ecosection_cd))
 
 #getting set up for ggplot
+
 ecosec_map <- spTransform(ecosec, CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
 
 eco_map <- leaflet(data = ecosec_map)
@@ -50,9 +54,83 @@ eco_map %>%
   setView(lng = -122.5, lat = 49.2, zoom = 6.5) %>%
   addProviderTiles("CartoDB.Positron") %>% 
   addPolygons(color = pal, 
-              popup = paste0("<strong>Ecosection: </strong>", ecosec_data$ecosection_nm))
+              popup = paste0("<strong>Ecosection: </strong>", ecosec_data$ecosection_nm)) 
 
 ```
+
+Check where our points fall
+
+```{r}
+db <- read.csv("data/site_net.csv", stringsAsFactors = FALSE)
+
+unique_locs <- db %>% 
+  select(decimal_lat, decimal_lon) %>% 
+  unique()
+
+points_in_df <- data.frame()
+
+#target 1, gulf islands
+i <- 1
+eco1 <- subset(ecosec_map, ecosection_cd %in% target2[i])
+plot(eco1, axes = T)
+
+for(p in 1:length(eco1@polygons[[1]]@Polygons)){
+    coords_eco <- eco1@polygons[[1]]@Polygons[[p]]@coords
+  points_in <- point.in.polygon(unique_locs$decimal_lon, unique_locs$decimal_lat,  coords_eco[,1],         coords_eco[,2], mode.checked=FALSE)
+  points_in_df <- bind_rows(points_in_df, data.frame(index = 1:length(points_in), points_in, i))
+}
+
+i <- 9
+eco1 <- subset(ecosec_map, ecosection_cd %in% target2[i])
+plot(eco1, axes = T)
+
+for(p in 1:length(eco1@polygons[[1]]@Polygons)){
+    coords_eco <- eco1@polygons[[1]]@Polygons[[p]]@coords
+  points_in <- point.in.polygon(unique_locs$decimal_lon, unique_locs$decimal_lat,  coords_eco[,1],         coords_eco[,2], mode.checked=FALSE)
+  points_in_df <- bind_rows(points_in_df, data.frame(index = 1:length(points_in), points_in, i))
+}
+
+
+
+for(i in 2:8){
+  eco1 <- subset(ecosec_map, ecosection_cd %in% target2[i])
+  plot(eco1, axes = T)
+  
+    coords_eco <- eco1@polygons[[1]]@Polygons[[1]]@coords
+  points_in <- point.in.polygon(unique_locs$decimal_lon, unique_locs$decimal_lat,  coords_eco[,1], coords_eco[,2], mode.checked=FALSE)
+  
+points_in_df <- bind_rows(points_in_df, data.frame(index = 1:length(points_in), points_in, i))
+
+}
+
+
+points_in_region <- points_in_df %>%
+  filter(points_in == 1) %>% 
+  arrange(index)
+
+
+new_regions <- unique_locs %>% 
+  mutate(index = 1:nrow(unique_locs)) %>% 
+  left_join(points_in_region) %>% 
+  left_join(data.frame(i = 1:length(target2), region =target2)) %>% 
+  mutate(region = as.character(region)) %>% 
+  mutate(region = ifelse(index %in% c(7:10,12,13, 151), "SGI", region)) %>% 
+  mutate(region = ifelse(index %in% c(115, 133:142, 152, 157:158), "USA", region)) %>% 
+  mutate(region = ifelse(index %in% c(156), "HEL", region)) %>% 
+  mutate(region = ifelse(index %in% c(143:144, 109, 88), "SPR", region)) %>% 
+  mutate(region = ifelse(index %in% c(114), "LIM", region)) %>% 
+  left_join(select(ecosec_data, ecosection_cd, ecosection_nm), by = c('region' = 'ecosection_cd')) %>% 
+  mutate(ecosection_nm = ifelse(region == "USA", "United States", ecosection_nm)) %>% 
+  select(decimal_lat, decimal_lon, region, ecosection_nm)
+
+write.csv(new_regions, "data/new_regions.csv", row.names = FALSE)
+
+plot(ecosec_map, axes = T)
+points(x = unique_locs$decimal_lon, y = unique_locs$decimal_lat, col = 'red' )
+
+```
+
+
 
 
 Example

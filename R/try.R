@@ -1,6 +1,6 @@
 input <- NULL
 
-input$region <- "Cowichan"
+input$region <- "All"
 
 input$bees <- c("Bombus\nmixtus")
 
@@ -10,7 +10,9 @@ input$plants <- c("Camassia\nquamash")
 
 input$maximizer <-  "Pollinator abundance"
 
-input$nplants <- 10
+input$n_plants <- 10
+
+input$native <- c("Non-Native")
 
 sort(unique(db$bee_sp))
 db %>% 
