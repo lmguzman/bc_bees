@@ -11,6 +11,7 @@ library(PBSmapping)
 library(cowplot)
 library(taxize)
 library(purrr)
+library(lubridate)
 
 tbl_PlantSpecies <-read.csv("raw_data/tbl_PlantSpecies.csv")
 
@@ -23,52 +24,52 @@ tblNames_Species <-read.csv("raw_data/tblNames_Species.csv")
 ##### fixing locations coordinates ######
 
 origin_dd <- tblLocation %>% 
-  select(New.LocID, DecimalLat, DecimalLon) %>% 
+  dplyr::select(New.LocID, DecimalLat, DecimalLon) %>% 
   extract(DecimalLat, into = "decimal_lat", regex = "(\\d+\\.\\d+)") %>% 
   extract(DecimalLon, into = "decimal_lon", regex = "(\\-\\d+\\.\\d+)") %>% 
   filter(!is.na(decimal_lat)) %>% 
-  mutate(decimal_lat = as.numeric(decimal_lat), decimal_lon = as.numeric(decimal_lon))
+  dplyr::mutate(decimal_lat = as.numeric(decimal_lat), decimal_lon = as.numeric(decimal_lon))
 
 degree_to_decimal <- tblLocation %>%
-  select(New.LocID, Degree.Lat, Degree.Lon) %>% 
+  dplyr::select(New.LocID, Degree.Lat, Degree.Lon) %>% 
   filter(!(New.LocID %in% origin_dd$New.LocID)) %>% 
   extract(Degree.Lat, into = "deg_lat", regex = "(\\d+)", remove = FALSE) %>% 
   extract(Degree.Lat, into = "min_lat", regex = "(\\°\\s*\\d+)", remove = FALSE) %>% 
   extract(min_lat, into = "min_lat", regex = "(\\d+)") %>% 
   extract(Degree.Lat, into = "sec_lat", regex = "([\\'|\\’]\\s*\\d+\\.*\\d+)") %>% 
   extract(sec_lat, into = "sec_lat", regex = "(\\d+\\.*\\d+)") %>% 
-  mutate(deg_min_sec_lat = paste(deg_lat, min_lat, sec_lat)) %>% 
-  mutate(decimal_lat = conv_unit(deg_min_sec_lat, from = 'deg_min_sec', to = 'dec_deg')) %>% 
+  dplyr::mutate(deg_min_sec_lat = paste(deg_lat, min_lat, sec_lat)) %>% 
+  dplyr::mutate(decimal_lat = conv_unit(deg_min_sec_lat, from = 'deg_min_sec', to = 'dec_deg')) %>% 
   extract(Degree.Lon, into = "deg_lon", regex = "(\\d+)", remove = FALSE) %>% 
   extract(Degree.Lon, into = "min_lon", regex = "(\\°\\s*\\d+)", remove = FALSE) %>% 
   extract(min_lon, into = "min_lon", regex = "(\\d+)") %>% 
   extract(Degree.Lon, into = "sec_lon", regex = "([\\'|\\’]\\s*\\d+\\.*\\d+)") %>% 
   extract(sec_lon, into = "sec_lon", regex = "(\\d+\\.*\\d+)") %>% 
-  mutate(deg_min_sec_lon = paste(deg_lon, min_lon, sec_lon)) %>% 
-  mutate(decimal_lon = conv_unit(deg_min_sec_lon, from = 'deg_min_sec', to = 'dec_deg')) %>% 
-  select(New.LocID, decimal_lat, decimal_lon) %>% 
+  dplyr::mutate(deg_min_sec_lon = paste(deg_lon, min_lon, sec_lon)) %>% 
+  dplyr::mutate(decimal_lon = conv_unit(deg_min_sec_lon, from = 'deg_min_sec', to = 'dec_deg')) %>% 
+  dplyr::select(New.LocID, decimal_lat, decimal_lon) %>% 
   filter(!is.na(decimal_lat)) %>% 
-  mutate(decimal_lat = as.numeric(decimal_lat), decimal_lon = -1*as.numeric(decimal_lon)) 
+  dplyr::mutate(decimal_lat = as.numeric(decimal_lat), decimal_lon = -1*as.numeric(decimal_lon)) 
 
 utm_orgin <- tblLocation %>%
-  select(New.LocID, UTMEW, UTMNS) %>% 
+  dplyr::select(New.LocID, UTMEW, UTMNS) %>% 
   filter(!is.na(UTMEW))
 
 utm_tab <- tblLocation %>% 
-  select(UTMEW, UTMNS) %>% 
+  dplyr::select(UTMEW, UTMNS) %>% 
   filter(!is.na(UTMEW)) %>% 
-  mutate(UTMEW = as.numeric(UTMEW)) %>% 
-  mutate(UTMNS = as.numeric(UTMNS)) %>% 
-  rename(X = UTMEW, Y = UTMNS)
+  dplyr::mutate(UTMEW = as.numeric(UTMEW)) %>% 
+  dplyr::mutate(UTMNS = as.numeric(UTMNS)) %>% 
+  dplyr::rename(X = UTMEW, Y = UTMNS)
 
 attr(utm_tab, "zone") <- 10
 attr(utm_tab, "projection") <- "UTM"
 utm_to_dec <- convUL(utm_tab, km=FALSE, southern=NULL)
 
 utm_to_decimal_final <- cbind(utm_orgin, utm_to_dec) %>% 
-  rename(decimal_lat = Y, decimal_lon = X) %>% 
-  select(New.LocID, decimal_lat, decimal_lon) %>% 
-  mutate(decimal_lat = as.numeric(decimal_lat), decimal_lon = as.numeric(decimal_lon)) 
+  dplyr::rename(decimal_lat = Y, decimal_lon = X) %>% 
+  dplyr::select(New.LocID, decimal_lat, decimal_lon) %>% 
+  dplyr::mutate(decimal_lat = as.numeric(decimal_lat), decimal_lon = as.numeric(decimal_lon)) 
 
 final_locations <- bind_rows(origin_dd, utm_to_decimal_final, degree_to_decimal)
 
@@ -191,5 +192,46 @@ db2 <- db_int %>%
 write.csv(db2, "data/site_net_loc_fil.csv", row.names = FALSE)
 
 
-##### check native 
+##### add blooming times  ###
+
+db3 <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
+
+plant_bee_table <- tblMainBee %>% 
+  dplyr::select(BeeID, New.LocID = NewLocID,Day0, Mon0, Yr0, SpID, PlantSpeciesID = FlorNum) %>% 
+  filter(!is.na(PlantSpeciesID)) %>% 
+  filter(!is.na(BeeID)) %>% 
+  left_join(dplyr::select(tblNames_Species, SpID, GenusName, Species, BeeGenusID)) %>% 
+  filter(!is.na(BeeGenusID)) %>% 
+  left_join(tbl_PlantSpecies) %>% 
+  dplyr::select(New.LocID, Day0, Mon0,  Yr0, GenusName, Species, Species.Name) %>% 
+  unite(col = "bee_sp", GenusName, Species, sep = "\n") %>% 
+  dplyr::rename(plant_sp = Species.Name)
+  
+all_flying_times <- plant_bee_table %>% 
+  dplyr::select(Day0, Mon0, Yr0, bee_sp) %>% 
+  dplyr::mutate(date = paste(Day0, Mon0, Yr0, sep = "-")) %>% 
+  dplyr::mutate(date = dmy(date)) %>% 
+  dplyr::mutate(month = month(date)) %>% 
+  group_by(bee_sp) %>% 
+  summarise(min = min(month),max =  max(month)) %>% 
+  filter(bee_sp %in% unique(db3$bee_sp)) %>% 
+  split(.$bee_sp) %>% 
+  map(~seq(.x$min, .x$max, 1))
+
+all_flowering_times <- plant_bee_table %>% 
+  dplyr::select(Day0, Mon0, Yr0, plant_sp) %>% 
+  dplyr::mutate(date = paste(Day0, Mon0, Yr0, sep = "-")) %>% 
+  dplyr::mutate(date = dmy(date)) %>% 
+  dplyr::mutate(month = month(date)) %>% 
+  group_by(plant_sp) %>% 
+  summarise(min = min(month),max =  max(month)) %>% 
+  dplyr::mutate(plant_sp = str_replace(plant_sp, " ", "\n")) %>% 
+  filter(plant_sp %in% unique(db3$plant_sp)) %>% 
+  split(.$plant_sp) %>% 
+  map(~seq(.x$min, .x$max, 1))
+
+saveRDS(all_flying_times, "data/all_flying_times.rds")
+
+saveRDS(all_flowering_times, "data/all_flowering_times.rds")
+
 

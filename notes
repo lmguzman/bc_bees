@@ -1,37 +1,17 @@
-For this region, give me the 10 plants that would maximize the number of interactions (regardless of the species). Or something like this
-
-For this region, give me the 10 plants that would maximize the number of interactions (the higher diversity too)
 
 BC biogeoclimatic zone designations - Gary oak ecosystem is CDF (coastal douglas fair ecosystem)
 CWH here
 Oakanagan - Ponderosa Pine 
 
-What is bombus occidentalis using 
 
-
-For sorting
-we want to plant shrubs or we can't do anything woody
-
-<<<<<<< HEAD
-Break up the alphabetical list into bees, wasps, flies
-
-
-- Add map to show what regions are
 - can you put just genus and get the plants for bombus
-- include by common name bumble bee vs bombus
 - colour plants by native or non-native
 - early- mid or late bloomer for the home gardeners (for everybody)
 - blooming at the same time as blueberry has been shown to be food for diversity of forage
   - increase diversity of 
 
-=======
-Filter by number of interactions
-
-Dataframe task: add biogeoclimatic regions, add plant Nat Vs Inv, add plant type, pollinators stating B, W, or F
-   Breaking it into native vs not. (or to colour to indicate)
-   Woody vs forbs 
    Break up the alphabetical list into bees, wasps, flies
-   BC biogeoclimatic zone designations
-   
-   
->>>>>>> origin/master
+
+how easy is it to make the two panels scroll differently? and perhaps the colours of pollinator groups should have more of a pattern? bees one colour group, flies another, others another
+
+Herbs cut out otherflies

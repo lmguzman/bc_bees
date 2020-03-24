@@ -12,7 +12,7 @@ input$maximizer <-  "Pollinator abundance"
 
 input$n_plants <- 10
 
-input$native <- c("Non-Native")
+input$native <- c("Native")
 
 sort(unique(db$bee_sp))
 db %>% 

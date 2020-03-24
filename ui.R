@@ -1,5 +1,15 @@
 library(shiny)
 library(shinydashboard)
+library(rgdal)
+library(leaflet)
+library(sp)
+library(ggplot2)
+library(ggmap)
+library(cartography)
+library(cowplot)
+library(dplyr)
+
+#reading in map data
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
 
@@ -12,7 +22,7 @@ shinyUI(dashboardPage(
     dashboardHeader(title= "Pollinators of \nBritish Columbia", titleWidth = 300),
 
     # Sidebar with a slider input for number of bins
-    dashboardSidebar(width = 450,
+    dashboardSidebar(width = 450, 
             leafletOutput("plot_region", height = 300),
             selectInput(inputId = 'region',
                         label = 'Region',
@@ -44,7 +54,7 @@ shinyUI(dashboardPage(
             conditionalPanel('input.action_type == "Get plants"',
                              selectInput(inputId = 'maximizer',
                                          label = 'Maximize:',
-                                         choices = c("Pollinator abundance", 'Pollinator diversity')),
+                                         choices = c("Pollinator abundance", 'Pollinator diversity', 'Phenological coverage')),
                              checkboxGroupInput(inputId = "native",
                                                 label = 'Use native plants only?',
                                                 choices = c("Native", "Non-Native")),

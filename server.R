@@ -15,8 +15,14 @@ library(ggplot2)
 library(ggmap)
 library(cartography)
 library(cowplot)
+library(tibble)
+source("R/functions.R")
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
+
+all_flowering_times <- readRDS("data/all_flowering_times.rds")
+
+all_flying_times <- readRDS("data/all_flying_times.rds")
 
 #reading in map data
 sections <- readOGR("data/ERC_ECOSECTIONS_SP/ERC_ECOSEC_polygon.shp", stringsAsFactors = F)
@@ -32,8 +38,8 @@ ecosec <- subset(sections, ecosection_cd %in% target2)
 ecosec_data <- ecosec@data
 
 ecosec@data <- ecosec@data %>%
-  select(ecosection_cd) %>%
-  mutate(ecosection_cd = factor(ecosection_cd))
+  dplyr::select(ecosection_cd) %>%
+  dplyr::mutate(ecosection_cd = factor(ecosection_cd))
 
 ecosec_map <- spTransform(ecosec, CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
 
@@ -108,19 +114,10 @@ shinyServer(function(input, output, session) {
         
         nice_loc <- input$region
         
-        n_plants <- input$n_plants
-        
         if(nice_loc == "All"){
             fil_db <- db
         }else{
             fil_db <- db[db$ecosection_nm == nice_loc,]
-        }
-        
-        names_to_use <- input$name_type
-        
-        if(names_to_use == "Common names"){
-          fil_db$bee_sp <- fil_db$bee_common
-          fil_db$plant_sp <- fil_db$plant_common
         }
         
         plant_native <- if(all(input$native == "Native")){
@@ -139,27 +136,93 @@ shinyServer(function(input, output, session) {
           fil_db <- fil_db[fil_db$plant_life_form %in% input$shrub,]
         }
         
+        n_plants <- input$n_plants
+        
+        if(length(unique(fil_db$plant_sp)) < n_plants){
+          n_plants <- length(unique(fil_db$plant_sp))
+        }
+        
         if(input$maximizer == "Pollinator abundance"){
             
             pl_sp <- names(sort(table(fil_db$plant_sp), decreasing = TRUE)[1:n_plants])
-        }else{
+        }else if(input$maximizer == "Pollinator diversity"){
             
             tb <- table(fil_db$plant_sp, fil_db$bee_sp)
             tb[tb > 0] <- 1
             
             pl_sp <- names(sort(rowSums(tb), decreasing = TRUE)[1:n_plants])
+        }else if(input$maximizer == "Phenological coverage"){
+          
+          flight.times.act <- all_flying_times[unique(fil_db$bee_sp)]
+          
+          bloom.times.act <- all_flowering_times[unique(fil_db$plant_sp)] 
+          
+          v.mat.act <- dplyr::select(fil_db, plant_sp, bee_sp) %>% 
+            unique() %>% dplyr::mutate(int = 1) %>% 
+            spread(key = 'plant_sp', value = int, fill = 0) %>% 
+            tibble::column_to_rownames('bee_sp') %>% 
+            as.matrix()
+          
+          #pl_sp <- find.mix(f=abundance.phenology.richness, k=n_plants, v.mat = v.mat.act, bloom.times = bloom.times.act, N = 100)
+          withProgress(message = 'Making plot', value = 0, {
+          
+          n.gens = 1000
+          x.in <- initial.popn(N = 100, n.plants = n_plants, n.plants.tot = ncol(v.mat.act),
+                            fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act)
+          out <- vector("numeric", n.gens)
+          for ( i in seq_len(n.gens) ){
+            x <- ga.step(N = 100, state = x.in, s = 5, p.mutate = 0.01, p.sex = 0.5, p.rec =  0.25, fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act)
+            out[i] <- x$best.w
+            
+            incProgress(1/n.gens, detail = paste("Doing part", i))
+           
+          }
+          res <- list(best.w=x$best.w, best.model=x$best.model, best.w.t=out)
+          
+          pl_sp <-colnames(v.mat.act)[which(res$best.model)]
+          
+          
+          fil2_db <- fil_db[fil_db$plant_sp %in% pl_sp,]
+          
+          fil_bloom_times <- bloom.times.act[pl_sp] %>% 
+            map_df(~data.frame(month = .x), .id = 'plant_sp') %>% 
+            left_join(fil2_db) %>% 
+            dplyr::select(plant_sp, month, plant_common) %>% 
+            unique()
+          
+          })
         }
-        
+      
         
         fil2_db <- fil_db[fil_db$plant_sp %in% pl_sp,]
+        
+        names_to_use <- input$name_type
+        
+        if(names_to_use == "Common names"){
+          fil2_db$bee_sp <- fil2_db$bee_common
+          fil2_db$plant_sp <- fil2_db$plant_common
+        }
         
         plant_order <- fil2_db %>% 
           dplyr::count(plant_sp) %>%
           arrange(n)
         
-        max_plot <- ggplot(fil2_db) + geom_bar(aes(x = plant_sp, fill = bee_guild)) + coord_flip() +
-          theme_cowplot() + scale_fill_viridis_d(name = "Type of \n pollinator") +
-          xlab("") + ylab("Number of recorded observations") + scale_x_discrete(limits = plant_order$plant_sp) 
+        if(input$maximizer == "Phenological coverage"){
+          if(names_to_use == "Common names"){
+            max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = month, y = plant_common), shape = 15, size = 10, colour = "#FCBA04") +
+              theme_cowplot() + scale_x_continuous(limits = c(1,12), breaks = c(1:12), labels = c("Jan", "Feb", "Mar",
+                                                                                                  "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
+              xlab("") + ylab("")
+          }
+          max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = month, y = plant_sp), shape = 15, size = 10, colour = "#FCBA04") +
+            theme_cowplot() + scale_x_continuous(limits = c(1,12), breaks = c(1:12), labels = c("Jan", "Feb", "Mar",
+                                                                                                "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
+            xlab("") + ylab("")
+        }else{
+          max_plot <- ggplot(fil2_db) + geom_bar(aes(x = plant_sp, fill = bee_guild)) + coord_flip() +
+            theme_cowplot() + scale_fill_viridis_d(name = "Type of \n pollinator") +
+            xlab("") + ylab("Number of recorded observations") + scale_x_discrete(limits = plant_order$plant_sp) 
+        }
          
         max_plot
     })
