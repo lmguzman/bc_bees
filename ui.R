@@ -8,6 +8,8 @@ library(ggmap)
 library(cartography)
 library(cowplot)
 library(dplyr)
+library(purrr)
+
 
 #reading in map data
 

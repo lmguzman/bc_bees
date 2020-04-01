@@ -16,6 +16,7 @@ library(ggmap)
 library(cartography)
 library(cowplot)
 library(tibble)
+library(purrr)
 source("R/functions.R")
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
