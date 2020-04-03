@@ -68,10 +68,11 @@ shinyUI(dashboardPage(
         # Show a plot of the generated distribution
         dashboardBody(
             fluidRow(
-                plotOutput("plot1", click= "plot_click")),
-            fluidRow(
-                verbatimTextOutput("info"),
-                htmlOutput("mySite"))
-        )
+              girafeOutput("plot1"))
+        # plotOutput("plot1", click= "plot_click")),
+        #     fluidRow(
+        #         verbatimTextOutput("info"),
+        #         htmlOutput("mySite"))
+         )
     )
 )
