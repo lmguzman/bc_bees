@@ -19,6 +19,8 @@ library(tibble)
 library(purrr)
 library(sna)
 library(Hmisc)
+library(ggiraph)
+library(gridExtra)
 source("R/functions.R")
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
@@ -238,7 +240,8 @@ shinyServer(function(input, output, session) {
         input$name_type
     ),{
         
-        type_net <- input$net_type
+        
+      type_net <- input$net_type
         
         if(type_net == "Pollinator"){
             selected_sp <- unlist(input$bees)
@@ -253,6 +256,7 @@ shinyServer(function(input, output, session) {
         }else{
             fil_db <- db[db$ecosection_nm == nice_loc,]
         }
+        
         names_to_use <- input$name_type
         
         if(names_to_use == "Common names"){
@@ -268,92 +272,155 @@ shinyServer(function(input, output, session) {
                 fil2_db <- fil_db[fil_db$plant_sp %in% selected_sp,]
             }
             
-            if(length(selected_sp) == 1){
-                
-                
-                if(type_net == "Pollinator"){
-                    bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
-                         spread(key = bee_sp, value = Freq) %>% 
-                         dplyr::mutate(` ` = 0) %>% 
-                        tibble::column_to_rownames("plant_sp")
-                }else{
-                    bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
-                        spread(key = bee_sp, value = Freq) %>% 
-                        tibble::column_to_rownames("plant_sp")
-                    bip_table[2,] <- 0
-                    rownames(bip_table)[2] <- ""
-                }
-                
-                
-            }else{
-                bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
-                    spread(key = bee_sp, value = Freq) %>% 
-                    tibble::column_to_rownames("plant_sp")  
-            }
-           
-          #drop the ones from the filter table
-          if(length(selected_sp) > 1){
+          if(length(selected_sp) == 1){
             
-            bip_table <- bip_table %>% 
-            rownames_to_column("plant_sp") %>%
-            naniar::replace_with_na_all(condition = ~.x == 1) %>% 
-            replace(is.na(.), 0) %>% 
-            tibble::column_to_rownames("plant_sp") 
-          
-          #remove cols with no values
-          bip_table <- bip_table[, -(which(colSums(bip_table)==0))]
+            if(type_net == "Pollinator"){
+              bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
+                spread(key = bee_sp, value = Freq) %>% 
+                dplyr::mutate(` ` = 0) %>% 
+                tibble::column_to_rownames("plant_sp")
+            }else{
+              bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
+                spread(key = bee_sp, value = Freq) %>% 
+                tibble::column_to_rownames("plant_sp")
+              bip_table[2,] <- 0
+              rownames(bip_table)[2] <- ""
+            }
+            
+          }else{
+            bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
+              spread(key = bee_sp, value = Freq) %>% 
+              tibble::column_to_rownames("plant_sp")  
           }
           
-          #create network object
           net <- bip_table %>% 
             network(matrix.type = "bipartite", 
                     ignore.eval = FALSE, 
                     names.eval = "weights")
           
-          #set attributes
-          #get plant native column for attributes
-          plant_att <- bip_table %>% 
-            rownames_to_column("plant_sp") %>%
-            left_join(db[,c("plant_sp", "plant_native")]) %>% 
-            unique %>% 
-            dplyr::mutate(plant_native = capitalize(plant_native))
+          
+          #Plant attributes
+          if(names_to_use == "Common names"){
+            plant_att <- bip_table %>%
+              rownames_to_column("plant_common") %>%
+              left_join(db[,c("plant_common", "plant_native", "plant_life_form")]) %>%
+              distinct(plant_common, .keep_all = TRUE) %>%
+              dplyr::mutate(plant_native = capitalize(plant_native))
+          } else{
+            plant_att <- bip_table %>%
+              rownames_to_column("plant_sp") %>%
+              left_join(db[,c("plant_sp", "plant_native","plant_life_form")]) %>%
+              distinct(plant_sp, .keep_all = TRUE) %>%
+              dplyr::mutate(plant_native = capitalize(plant_native))
+          }
+          
+          #Pollinator attributes
+          if(names_to_use == "Common names"){
+            if(type_net == "Pollinator"){
+              insect_att <- bip_table %>%
+                rownames_to_column("plant_common") %>%
+                pivot_longer(-plant_common, "bee_common", values_to = "count") %>%
+                filter(bee_common != " ") %>%
+                left_join(db[,c("bee_common", "bee_diet", "bee_nest_location", "bee_guild")]) %>%
+                distinct(bee_common, .keep_all = TRUE) %>%
+                dplyr::mutate(bee_diet = capitalize(bee_diet)) %>%
+                dplyr::mutate(group = case_when(bee_common == "BLANK" ~ "BLANK",
+                                                TRUE ~ "Insect"))
+            }else{
+              insect_att <- bip_table %>%
+                rownames_to_column("plant_common") %>%
+                pivot_longer(-plant_common, "bee_common", values_to = "count") %>%
+                filter(plant_common != "") %>%
+                left_join(db[,c("bee_common", "bee_diet", "bee_nest_location", "bee_guild")]) %>%
+                distinct(bee_common, .keep_all = TRUE) %>%
+                dplyr::mutate(bee_diet = capitalize(bee_diet)) %>%
+                dplyr::mutate(group = case_when(bee_common == "BLANK" ~ "BLANK",
+                                                TRUE ~ "Insect"))
+            }
+          } else{ 
+            if(type_net == "Pollinator"){
+              insect_att <- bip_table %>%
+                rownames_to_column("plant_sp") %>%
+                pivot_longer(-plant_sp, "bee_sp", values_to = "count") %>%
+                filter(bee_sp != " ") %>%
+                left_join(db[,c("bee_sp", "bee_diet", "bee_nest_location", "bee_guild")]) %>%
+                distinct(bee_sp, .keep_all = TRUE) %>%
+                dplyr::mutate(bee_diet = capitalize(bee_diet)) %>%
+                dplyr::mutate(group = case_when(bee_sp == "BLANK" ~ "BLANK",
+                                                TRUE ~ "Insect"))
+            } else {
+              insect_att <- bip_table %>%
+                rownames_to_column("plant_sp") %>%
+                pivot_longer(-plant_sp, "bee_sp", values_to = "count") %>%
+                filter(plant_sp != "") %>%
+                left_join(db[,c("bee_sp", "bee_diet", "bee_nest_location", "bee_guild")]) %>%
+                distinct(bee_sp, .keep_all = TRUE) %>%
+                dplyr::mutate(bee_diet = capitalize(bee_diet)) %>%
+                dplyr::mutate(group = case_when(bee_sp == "BLANK" ~ "BLANK",
+                                                TRUE ~ "Insect"))
+            }
+          }
           
           #Set colour of nodes based on Phono
-          col <- c("Native"= "#18b583", "Non-native"="#f4a582", "Insect"="#1092de")
-          net %v% "phono" = c(plant_att$plant_native, rep("Insect", ncol(bip_table)))
+          col <- c("Native"= "#18b583", "Non-native"="#f4a582", "Insect"="#1092de", "Both" = "#fa9fb5")
+          net %v% "phono" = c(plant_att$plant_native, insect_att$group)
+          
+          alp <- c("Pollenivore"= 1, "Herbivore"=1, "Predator"=1, "Parasite"= 1, "Detritivore"=1, 
+                   "Herb" = 1, "Shrub" = 1, "Tree" = 1, "Vine" = 1)
+          net %v% "life" = c(plant_att$plant_life_form, insect_att$bee_diet)
           
           #set edge attributes size and colour
-          set.edge.attribute(net, "eSize", log(net %e% "weights"))
-          #set.edge.attribute(net, "eSize", sqrt(net %e% "weights"))
+          set.edge.attribute(net, "eSize", sqrt(net %e% "weights"))
           set.edge.attribute(net, "eColor", ifelse(net %e% "weights" > 80, "#525252", 
                                                    ifelse(net %e% "weights" < 3, "#d9d9d9", 
                                                           ifelse(net %e% "weights" > 30, "#737373", "#969696"))))
           
+          ggdata <-ggnet2(net,
+                          label = FALSE,
+                          mode = "kamadakawai",
+                          color = "phono",
+                          alpha = "life",
+                          alpha.node = alp,
+                          color.legend = "Group",
+                          edge.size = "eSize",
+                          edge.color = "eColor",
+                          palette = col,
+                          size = 5)$data
+          
+          # ggdata$color[ggdata$label == " "] <- NA
+          # ggdata$alpha[ggdata$label == " "] <- NA
+          # ggdata$label[is.na(ggdata$color)] <- NA
+          
           #make plot
           gg <- ggnet2(net,
                  label = FALSE,
-                 color = "phono", 
-                 color.legend = "",
+                 mode = "kamadakawai",
+                 color = "phono",
+                 color.legend = element_blank(),
                  edge.size = "eSize",
                  edge.color = "eColor",
-                 palette = col, 
-                 size = 5) +
-            geom_point(aes(color = color), size = 11, color = "white") +
-            geom_point(aes(color = color), size = 11, alpha = .75) +
-            geom_point(aes(color = color), size = 8) +
-            geom_text(aes(label = label), color = "black", fontface = "bold", size = 2.25)
-            
-            gg 
-            
-            
+                 palette = col) +
+            geom_point(aes(color = color), size = 12, color = "white") +
+            geom_point(aes(color = color), size = 12, alpha = .75) +
+            geom_point_interactive(aes(color = color, tooltip = ggdata$alpha, data_id = ggdata$alpha), size = 10) +
+            geom_text(aes(label = label), color = "black", size = 3)
+          
+          gg <- girafe(ggobj = gg, width_svg = 20, height_svg = 13) %>% 
+            girafe_options(.,
+                         opts_tooltip(opacity = .7),
+                         opts_zoom(min = .5, max = 4),
+                         sizingPolicy(defaultWidth = "100%", defaultHeight = "300px"))
+          #opts_hover(css = "fill:red;stroke:orange;r:5pt;"))
         }
 
     })
 
     # Make the plot
-    output$plot1 <- renderPlot({
+    output$plot1 <- renderGirafe({
         if(input$action_type == "Build Network"){
-           plot_gg()
+          
+          plot_gg()
+          
         }else{
             maxi_plants()
         }
@@ -361,23 +428,23 @@ shinyServer(function(input, output, session) {
    
     
     sp_name_plot <- eventReactive(input$plot_click$x,{
-        
+
         if(input$action_type == "Build Network"){
             ggp <-plot_gg()
             p_x <- input$plot_click$x
             p_y <- input$plot_click$y
             min_x <- min(all_dist <- Rfast::dista(matrix(c(x = p_x, y = p_y), nrow =1), as.matrix(ggp$data[,c("x", "y")])))
             sp_name <- ggp$data[which(all_dist == min(all_dist)),"label"]
-            
+
             sp_name
         }else{
             NULL
         }
 
     })
-    
+
     output$info <- renderText({
-      
+
       if(input$action_type == "Build Network"){
         if (is.null(input$plot_click$x)){
           "Click on any species to see information about it."
@@ -387,10 +454,10 @@ shinyServer(function(input, output, session) {
           paste("selected species=",sp_name2, "\n")
         }
       }
-        
+
     })
     output$mySite <- renderUI({
-      
+
       if(input$action_type == "Build Network"){
         if (is.null(input$plot_click$x)){
             " "

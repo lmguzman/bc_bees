@@ -2,19 +2,28 @@ input <- NULL
 
 input$region <- "All"
 
-input$bees <- c("Bombus\nmixtus")
-
 input$net_type <- "Plant"
+input$net_type <- "Pollinator"
+input$name_type <- "Scientific names"
+input$plants <- c("Abelia")
+input$plants <- c("Abelia", "Mahonia\naquifolium", "Collinsia\nparviflora")
+# input$maximizer <-  "Pollinator abundance"
+# 
+# input$n_plants <- 10
+# 
+# input$native <- c("Native")
 
-input$plants <- c("Camassia\nquamash")
+input$name_type <- "Scientific names"
+input$bees <- c("Adela\nseptentrionella")
 
-input$maximizer <-  "Pollinator abundance"
-
-input$n_plants <- 10
-
-input$native <- c("Native")
-
+input$name_type <- "Common names"
+input$bees <- c("Digger bees", "Mining bee", "Mason bees")
+input$bees <- c("Digger bees")
 sort(unique(db$bee_sp))
+
+
+
+input$action_type <- "Build Network"
 db %>% 
   filter(locs == "Cowichan", bee_sp == "Andrena\nvicina")
 
@@ -38,103 +47,71 @@ a <- Rfast::dista(xnew, x)
 
 
 
-
 #How the data comes into the network figure 
-bip_table <- data.frame(table(db[,c("bee_sp", "plant_sp")])) %>% 
-  spread(key = bee_sp, value = Freq) %>% 
-  tibble::column_to_rownames("plant_sp")
+# bip_table <- data.frame(table(db[,c("bee_sp", "plant_sp")])) %>% 
+#   spread(key = bee_sp, value = Freq) %>% 
+#   tibble::column_to_rownames("plant_sp")
 
 #################################################################################
 #Tylers stuff
 #apply filter to db
-get_mat <- function(df) {
-  contin_tab <- as.data.frame.matrix(xtabs(~ plant_sp + bee_sp, df))
-  return(contin_tab)
-}
+# get_mat <- function(df) {
+#   contin_tab <- as.data.frame.matrix(xtabs(~ plant_sp + bee_sp, df))
+#   return(contin_tab)
+# }
 
 #filter the right data and convert to matrix
-bip_table <- db %>%
-  filter(plant_order == "Liliales") %>%
-  get_mat() %>%
-  rownames_to_column("plant_sp") %>%
-  naniar::replace_with_na_all(condition = ~.x == 1) %>% 
-  replace(is.na(.), 0) %>% 
-  tibble::column_to_rownames("plant_sp") %>% View()
+# bip_table <- db %>%
+#   filter(plant_order == "Liliales") %>%
+#   get_mat() %>%
+#   rownames_to_column("plant_sp") %>%
+#   naniar::replace_with_na_all(condition = ~.x == 1) %>% 
+#   replace(is.na(.), 0) %>% 
+#   tibble::column_to_rownames("plant_sp") %>% View()
 
 #################################################################################
-#drop the ones from the filter table
-bip_table <- bip_table %>% 
-  rownames_to_column("plant_sp") %>%
-  naniar::replace_with_na_all(condition = ~.x == 1) %>% 
-  replace(is.na(.), 0) %>% 
-  tibble::column_to_rownames("plant_sp") 
+# #drop the ones from the filter table
+# bip_table <- bip_table %>% 
+#   rownames_to_column("plant_sp") %>%
+#   naniar::replace_with_na_all(condition = ~.x == 1) %>% 
+#   replace(is.na(.), 0) %>% 
+#   tibble::column_to_rownames("plant_sp") 
+# 
+# #remove cols with no values
+# bip_table <- bip_table[, -(which(colSums(bip_table)==0))]
 
-#remove cols with no values
-bip_table <- bip_table[, -(which(colSums(bip_table)==0))]
+bip_table <- plant1
+bip_table <- plant3
+bip_table <- poll1 
+bip_table <- poll3
+
+
+#Failed attempts to remove the extra dot 
 
 #create network object
-net <- bip_table %>% 
-  network(matrix.type = "bipartite", 
-          ignore.eval = FALSE, 
-          names.eval = "weights")
-
-#set attributes
-#get plant native column for attributes
-plant_att <- bip_table %>% 
-  rownames_to_column("plant_sp") %>%
-  left_join(db[,c("plant_sp", "plant_native", "plant_life_form")]) %>% 
-  unique() %>% 
-  dplyr::mutate(plant_native = capitalize(plant_native))
-
-insect_att <- bip_table %>% 
-  rownames_to_column("plant_sp") %>%
-  pivot_longer(-plant_sp, "bee_sp", values_to = "count") %>% 
-  pivot_wider(names_from = plant_sp, values_from = count) %>% 
-  left_join(db[,c("bee_sp", "bee_diet", "bee_nest_location", "bee_guild")]) %>%
-  unique() %>% 
-  dplyr::mutate(bee_diet = capitalize(bee_diet))
-
-#Set colour of nodes based on Phono
-col <- c("Native"= "#18b583", "Non-native"="#f4a582", "Insect"="#1092de")
-net %v% "phono" = c(plant_att$plant_native, rep("Insect", ncol(bip_table)))
-phono = c(plant_att$plant_native, rep("Insect", ncol(bip_table)))
-alp <- c("Pollenivore"= 1, "Herbivore"=1, "Predator"=1, "Parasite"= 1, "Detritivore"=1,"Herb" = 1)
-net %v% "life" = c(plant_att$plant_life_form, insect_att$bee_diet)
-
-#set edge attributes size and colour
-set.edge.attribute(net, "eSize", log(net %e% "weights"))
-#set.edge.attribute(net, "eSize", sqrt(net %e% "weights"))
-set.edge.attribute(net, "eColor", ifelse(net %e% "weights" > 80, "#525252", 
-                                         ifelse(net %e% "weights" < 3, "#d9d9d9", 
-                                                ifelse(net %e% "weights" > 30, "#737373", "#969696"))))
+if(ncol(bip_table) == 2){
+  bip_table <- bip_table %>%
+    rownames_to_column("plant_common") %>%
+    pivot_longer(-plant_common, "bee_sp", "count") %>%
+    pivot_wider(names_from = "plant_common", values_from = value)
+}
 
 
-#make plot
-mynet <-ggnet2(net,
-       label = FALSE,
-       mode = "kamadakawai",
-       #alpha = "life",
-       #alpha.palette = alp,
-       #alpha.legend = element_blank(),
-       color = "phono",
-       color.legend = "Group",
-       edge.size = "eSize",
-       edge.color = "eColor",
-       palette = col,
-       size = 5) +
-  geom_point(aes(color = color), size = 12, color = "white") +
-  geom_point(aes(color = color), size = 12, alpha = .75) +
-  geom_point_interactive(aes(color = color, tooltip = gg$alpha, data_id = gg$alpha), size = 10) +
-  geom_text(aes(label = label), color = "black", size = 1.25)
-
-  girafe(ggobj = mynet, width_svg = 9, height_svg = 7)
-  
-
-install.packages("ggiraph")
-library(ggiraph)
-
-
-
-
-
-
+# df <- data.frame(groups = c("Native", "Introduced", "Both", "Insect"),
+#                  that = c(1,2,3,4),
+#                  this= rep(1,4))
+#                   
+# legend <- df %>% 
+#   ggplot(., aes(that, this, label = groups)) +
+#   geom_point(size = 8, col = c("#18b583","#f4a582","#fa9fb5", "#1092de")) +
+#   ylim(.25, 2) +
+#   xlim(0, 5) +
+#   geom_text(, size = 5, nudge_y = .6) +
+#   theme(axis.line=element_blank(),axis.text.x=element_blank(),
+#         axis.text.y=element_blank(),axis.ticks=element_blank(),
+#         axis.title.x=element_blank(),
+#         axis.title.y=element_blank(),legend.position="none",
+#         panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank(),
+#         panel.grid.minor=element_blank(),plot.background=element_blank())
+#  
+#  gg <- grid.arrange(gg, legend, nrow = 2, heights = c(2,.5))
