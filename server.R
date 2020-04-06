@@ -17,6 +17,8 @@ library(cartography)
 library(cowplot)
 library(tibble)
 library(purrr)
+library(sna)
+library(Hmisc)
 source("R/functions.R")
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
@@ -271,13 +273,11 @@ shinyServer(function(input, output, session) {
                 
                 if(type_net == "Pollinator"){
                     bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
-                        mutate(Freq = Freq*0.1) %>% 
-                        spread(key = bee_sp, value = Freq) %>% 
-                        mutate(` ` = 0) %>% 
+                         spread(key = bee_sp, value = Freq) %>% 
+                         dplyr::mutate(` ` = 0) %>% 
                         tibble::column_to_rownames("plant_sp")
                 }else{
                     bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
-                        mutate(Freq = Freq*0.1) %>% 
                         spread(key = bee_sp, value = Freq) %>% 
                         tibble::column_to_rownames("plant_sp")
                     bip_table[2,] <- 0
@@ -287,29 +287,63 @@ shinyServer(function(input, output, session) {
                 
             }else{
                 bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
-                    mutate(Freq = Freq*0.1) %>% 
                     spread(key = bee_sp, value = Freq) %>% 
                     tibble::column_to_rownames("plant_sp")  
             }
            
-          
-          #net %v% "phono" = ifelse(letters[1:10] %in% c("a", "e", "i"), "vowel", "consonant")
-          
-          #data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
-            #left_join(select(fil2_db, plant_sp, plant_native)) %>% 
-            #unique()
-          
-            bip <- network(bip_table,
-                           matrix.type = "bipartite",
-                           ignore.eval = FALSE,
-                           names.eval = "weights")
+          #drop the ones from the filter table
+          if(length(selected_sp) > 1){
             
-            col = c("actor" = "#50C878", "event" = "#FFAA1D")
+            bip_table <- bip_table %>% 
+            rownames_to_column("plant_sp") %>%
+            naniar::replace_with_na_all(condition = ~.x == 1) %>% 
+            replace(is.na(.), 0) %>% 
+            tibble::column_to_rownames("plant_sp") 
           
-            gg <- ggnet2(bip, label = TRUE, color = "mode", palette = col, edge.size = 'weights') +
-                theme(legend.position = 'none')
+          #remove cols with no values
+          bip_table <- bip_table[, -(which(colSums(bip_table)==0))]
+          }
+          
+          #create network object
+          net <- bip_table %>% 
+            network(matrix.type = "bipartite", 
+                    ignore.eval = FALSE, 
+                    names.eval = "weights")
+          
+          #set attributes
+          #get plant native column for attributes
+          plant_att <- bip_table %>% 
+            rownames_to_column("plant_sp") %>%
+            left_join(db[,c("plant_sp", "plant_native")]) %>% 
+            unique %>% 
+            dplyr::mutate(plant_native = capitalize(plant_native))
+          
+          #Set colour of nodes based on Phono
+          col <- c("Native"= "#18b583", "Non-native"="#f4a582", "Insect"="#1092de")
+          net %v% "phono" = c(plant_att$plant_native, rep("Insect", ncol(bip_table)))
+          
+          #set edge attributes size and colour
+          set.edge.attribute(net, "eSize", log(net %e% "weights"))
+          #set.edge.attribute(net, "eSize", sqrt(net %e% "weights"))
+          set.edge.attribute(net, "eColor", ifelse(net %e% "weights" > 80, "#525252", 
+                                                   ifelse(net %e% "weights" < 3, "#d9d9d9", 
+                                                          ifelse(net %e% "weights" > 30, "#737373", "#969696"))))
+          
+          #make plot
+          gg <- ggnet2(net,
+                 label = FALSE,
+                 color = "phono", 
+                 color.legend = "",
+                 edge.size = "eSize",
+                 edge.color = "eColor",
+                 palette = col, 
+                 size = 5) +
+            geom_point(aes(color = color), size = 11, color = "white") +
+            geom_point(aes(color = color), size = 11, alpha = .75) +
+            geom_point(aes(color = color), size = 8) +
+            geom_text(aes(label = label), color = "black", fontface = "bold", size = 2.25)
             
-            gg
+            gg 
             
             
         }
