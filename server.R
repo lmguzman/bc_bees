@@ -21,6 +21,7 @@ library(sna)
 library(Hmisc)
 library(ggiraph)
 library(gridExtra)
+library(htmlwidgets)
 source("R/functions.R")
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
@@ -229,6 +230,11 @@ shinyServer(function(input, output, session) {
             xlab("") + ylab("Number of recorded observations") + scale_x_discrete(limits = plant_order$plant_sp) 
         }
          
+        max_plot <- girafe(ggobj = max_plot, width_svg = 20, height_svg = 13) %>%
+          girafe_options(.,
+                         opts_tooltip(opacity = .7),
+                         opts_zoom(min = .5, max = 4),
+                         sizingPolicy(defaultWidth = "100%", defaultHeight = "300px"))
         max_plot
     })
     
@@ -391,6 +397,12 @@ shinyServer(function(input, output, session) {
           # ggdata$alpha[ggdata$label == " "] <- NA
           # ggdata$label[is.na(ggdata$color)] <- NA
           
+          ggdata$sci_names <- str_extract(ggdata$label, '[A-Za-z]+')
+          
+          ggdata$onclick <- sprintf("window.open(\"%s%s\")",
+                                    "http://en.wikipedia.org/wiki/", 
+                                    as.character(ggdata$sci_names))
+          
           #make plot
           gg <- ggnet2(net,
                  label = FALSE,
@@ -402,16 +414,19 @@ shinyServer(function(input, output, session) {
                  palette = col) +
             geom_point(aes(color = color), size = 12, color = "white") +
             geom_point(aes(color = color), size = 12, alpha = .75) +
-            geom_point_interactive(aes(color = color, tooltip = ggdata$alpha, data_id = ggdata$alpha), size = 10) +
-            geom_text(aes(label = label), color = "black", size = 3)
+            geom_point_interactive(aes(color = color, tooltip = ggdata$alpha, data_id = ggdata$alpha, onclick = ggdata$onclick), size = 30) +
+            geom_text(aes(label = label), color = "black", size = 9)
           
           gg <- girafe(ggobj = gg, width_svg = 20, height_svg = 13) %>% 
             girafe_options(.,
                          opts_tooltip(opacity = .7),
                          opts_zoom(min = .5, max = 4),
                          sizingPolicy(defaultWidth = "100%", defaultHeight = "300px"))
+          
+          gg
           #opts_hover(css = "fill:red;stroke:orange;r:5pt;"))
-        }
+          
+          }
 
     })
 
@@ -422,10 +437,9 @@ shinyServer(function(input, output, session) {
           plot_gg()
           
         }else{
-            maxi_plants()
+          maxi_plants()
         }
         })
-   
     
     sp_name_plot <- eventReactive(input$plot_click$x,{
 

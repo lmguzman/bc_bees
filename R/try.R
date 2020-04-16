@@ -7,11 +7,13 @@ input$net_type <- "Pollinator"
 input$name_type <- "Scientific names"
 input$plants <- c("Abelia")
 input$plants <- c("Abelia", "Mahonia\naquifolium", "Collinsia\nparviflora")
-# input$maximizer <-  "Pollinator abundance"
-# 
-# input$n_plants <- 10
-# 
-# input$native <- c("Native")
+ 
+input$maximizer <-  "Pollinator abundance"
+input$maximizer <-  "Phenological Coverage"
+ 
+ input$n_plants <- 10
+ 
+ input$native <- c("Native")
 
 input$name_type <- "Scientific names"
 input$bees <- c("Adela\nseptentrionella")
@@ -115,3 +117,20 @@ if(ncol(bip_table) == 2){
 #         panel.grid.minor=element_blank(),plot.background=element_blank())
 #  
 #  gg <- grid.arrange(gg, legend, nrow = 2, heights = c(2,.5))
+
+install.packages("taxize")
+library(taxize)
+
+sci_names <- unique(str_extract(db$bee_sp, '[A-Za-z]+'))
+
+bee_family <- tax_name(query = sci_names, get = "family")
+
+bee_family <- bee_family %>%
+  dplyr::select(-db, "bee_family" = family, "bee_genus"= query)
+
+db %>%
+  add_column(bee_genus = str_extract(db$bee_sp, '[A-Za-z]+'), .after = "bee_order") %>% 
+  left_join(bee_family) %>%
+  dplyr::select(1:11, length(.), everything()) %>% 
+  dplyr::mutate(bee_family = case_when(bee_genus == "Adela" ~ "Adelidae",
+                                       TRUE ~ bee_family))
