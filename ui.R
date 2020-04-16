@@ -9,7 +9,9 @@ library(cartography)
 library(cowplot)
 library(dplyr)
 library(purrr)
-
+library(ggiraph)
+library(gridExtra)
+library(htmlwidgets)
 
 #reading in map data
 

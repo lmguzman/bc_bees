@@ -21,6 +21,7 @@ library(sna)
 library(Hmisc)
 library(ggiraph)
 library(gridExtra)
+library(htmlwidgets)
 source("R/functions.R")
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
