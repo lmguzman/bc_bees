@@ -41,7 +41,7 @@ shinyUI(dashboardPage(
                         choices = c("Scientific names", "Common names")),
             selectInput(inputId = 'action_type',
                         label = 'What do you want to do?',
-                        choices = c("", "Build Network", "Get plants")),
+                        choices = c("", "Build Network", "Get plants", "Support crop")),
             conditionalPanel('input.action_type == "Build Network"',
                              selectInput(inputId = 'net_type',
                                          label = 'Type of Network',
@@ -71,7 +71,19 @@ shinyUI(dashboardPage(
                                                 label = 'Which types of plants do you want to use?',
                                                 choices = c("Herb","Shrub","Vine","Tree","Various")),
                              numericInput("n_plants", "Number of plants:", 10, min = 2, max = 100),
-                             actionButton("go", "Go"))
+                             actionButton("go", "Go")),
+            conditionalPanel('input.action_type == "Support crop"',
+                             selectInput(inputId = 'crop',
+                                         label = 'Crop:',
+                                         choices = c("Blueberry", 'Cranberry', 'Apple')),
+                             checkboxGroupInput(inputId = "native",
+                                                label = 'Use native plants only?',
+                                                choices = c("Native", "Non-Native")),
+                             checkboxGroupInput(inputId = "shrub",
+                                                label = 'Which types of plants do you want to use?',
+                                                choices = c("Herb","Shrub","Vine","Tree","Various")),
+                             numericInput("n_plants", "Number of plants:", 10, min = 2, max = 100),
+                             actionButton("go2", "Go"))
         ),
 
         # Show a plot of the generated distribution
@@ -82,11 +94,17 @@ shinyUI(dashboardPage(
                         #tabPanel("Summary", verbatimTextOutput("summary")),
                         tabPanel("Contributors", 
                                  h4("Developers:"),
-                                 p("This app is developed by Dr. Laura Melissa Guzman, Tyler Kelly, Dr. Leithen M'Gonigle, Dr. Lora Morandin and Dr. Elizabeth Elle in collaboration with Pollination Partnership and the Native Bee Society"),
+                                 p("This app is developed by Laura Melissa Guzman, Tyler Kelly, Leithen M'Gonigle, Lora Morandin and Elizabeth Elle in collaboration with Pollination Partnership and the Native Bee Society of British Columbia"),
                                  h4("Data contributors:"),
                                  p("The data for this app was collected by Dr. Elizabeth Elle"),
                                  h4("References:"),
-                                 p(""))
+                                 p("Genetic algorithm for phenological coverage:"),
+                                 p("M'Gonigle, Williams, Lonsdorf, Kremen. (2016) A Tool for Selecting Plants When Restoring Habitat for Pollinators. Conservation Letters. 10(1): 105-111"),
+                                 h4("Correspondence:"),
+                                 p("Laura Melissa Guzman"),
+                                 p("E-mail: laura_melissa_guzman@sfu.ca"),
+                                 h4("Acknowledgements:"),
+                                 p("We want to thank Sarah Jonhnson, Elijah Rejes and Matthew Pennell for feedback."))
             )
         
          )

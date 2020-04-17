@@ -439,14 +439,125 @@ shinyServer(function(input, output, session) {
 
     })
 
+    plot_crop <- eventReactive(c(
+      input$go2
+    ),{
+      
+      crop_type <- input$crop
+      
+      if(crop_type == 'Cranberry'){crop_type <- "Blueberry"}
+      if(crop_type == 'Apple'){crop_type <- "Apples"}
+      
+      bees_crop <- unique(db[db$plant_common == crop_type,'bee_sp'])
+      
+      fil_db_1 <- db[db$bee_sp %in% bees_crop,]
+      
+      fil_db <- fil_db_1[fil_db_1$plant_common != crop_type,]
+      
+      plant_native <- if(all(input$native == "Native")){
+        c("native", "both")
+      }else if(all(input$native == "Non-Native")){
+        c("non-native", "both")
+      }else{
+        c("native", "non-native", "both")
+      }
+      
+      if(!is.null(plant_native)){
+        fil_db <- fil_db[fil_db$plant_native %in% plant_native,]
+      }
+      
+      if(!is.null(input$shrub)){
+        fil_db <- fil_db[fil_db$plant_life_form %in% input$shrub,]
+      }
+      
+      
+      n_plants <- input$n_plants
+      
+      if(length(unique(fil_db$plant_sp)) < n_plants){
+        n_plants <- length(unique(fil_db$plant_sp))
+      }
+      
+      flight.times.act <- all_flying_times[unique(fil_db$bee_sp)]
+      
+      bloom.times.act <- all_flowering_times[unique(fil_db$plant_sp)] 
+      
+      v.mat.act <- dplyr::select(fil_db, plant_sp, bee_sp) %>% 
+        unique() %>% dplyr::mutate(int = 1) %>% 
+        spread(key = 'plant_sp', value = int, fill = 0) %>% 
+        tibble::column_to_rownames('bee_sp') %>% 
+        as.matrix()
+      
+      withProgress(message = 'Making plot', value = 0, {
+        
+        n.gens = 1000
+        x.in <- initial.popn(N = 100, n.plants = n_plants, n.plants.tot = ncol(v.mat.act),
+                             fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act)
+        out <- vector("numeric", n.gens)
+        for(i in seq_len(n.gens)){
+          x <- ga.step(N = 100, state = x.in, s = 5, p.mutate = 0.01, p.sex = 0.5, p.rec =  0.25, fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act)
+          out[i] <- x$best.w
+          
+          incProgress(1/n.gens, detail = paste("Doing part", i))
+          
+        }
+        
+      })
+      
+        res <- list(best.w=x$best.w, best.model=x$best.model, best.w.t=out)
+
+        pl_sp <-colnames(v.mat.act)[which(res$best.model)]
+
+
+        fil2_db <- fil_db[fil_db$plant_sp %in% pl_sp,]
+
+        fil_bloom_times <- bloom.times.act[pl_sp] %>%
+          map_df(~data.frame(week = .x), .id = 'plant_sp') %>%
+          left_join(fil2_db) %>%
+          dplyr::select(plant_sp, week, plant_common) %>%
+          unique()
+        
+        fil2_db <- fil_db[fil_db$plant_sp %in% pl_sp,]
+        
+        names_to_use <- input$name_type
+        
+        if(names_to_use == "Common names"){
+          max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_common), shape = 15, size = 10, colour = "#FCBA04") +
+            theme_cowplot() + scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar",
+                                                                                                      "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+                                                 sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
+            xlab("") + ylab("")
+        }
+        max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_sp), shape = 15, size = 10, colour = "#FCBA04") +
+          theme_cowplot() + scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar",
+                                                                                                    "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+                                               sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
+          xlab("") + ylab("")
+      
+        
+        max_plot <- max_plot +
+          theme(axis.text = element_text(size = 20),
+                axis.title = element_text(size = 20),
+                legend.text = element_text(size = 20),
+                legend.title = element_text(size = 20))
+        
+        max_plot <- girafe(ggobj = max_plot, width_svg = 20, height_svg = 13) %>%
+          girafe_options(.,
+                         opts_tooltip(opacity = .7),
+                         opts_zoom(min = .5, max = 4),
+                         sizingPolicy(defaultWidth = "100%", defaultHeight = "300px"))
+        max_plot
+    })
+    
     # Make the plot
     output$plot1 <- renderGirafe({
         if(input$action_type == "Build Network"){
           
           plot_gg()
           
-        }else{
+        }else if(input$action_type == "Get plants"){
           maxi_plants()
+        }else if(input$action_type == "Support crop"){
+          plot_crop()
         }
         })
     

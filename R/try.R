@@ -23,7 +23,7 @@ input$bees <- c("Digger bees", "Mining bee", "Mason bees")
 input$bees <- c("Digger bees")
 sort(unique(db$bee_sp))
 
-
+input$crop <- "Blueberry"
 
 input$action_type <- "Build Network"
 db %>% 
