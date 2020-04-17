@@ -4,14 +4,15 @@ abundance <- function(m, v.mat) sum(rowSums(v.mat[,m]))
 ## pollinator richness function
 richness <- function(m, v.mat) sum(rowSums(v.mat[,m]>0)>0)
 
+geometric.mean <- function(x){
+  (prod(x))^(1/length(x))
+}
 ## pollinator phenology function
 phenology <- function(m, bloom.times) {
-  geometric.mean <- function(x)
-    (prod(x))^(1/length(x))
-  
+
   possible.coverage <- unique(unlist(bloom.times))
   coverage <- rle(sort(unlist(bloom.times[m])))
-  tmp <- rep(0, 12)
+  tmp <- rep(0, 52)
   tmp[coverage$values] <- coverage$lengths
   geometric.mean(tmp+1)
 }

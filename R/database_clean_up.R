@@ -97,7 +97,8 @@ db <- read.csv("data/site_net.csv", stringsAsFactors = FALSE)
 regions <- read.csv("data/new_regions.csv")
 
 db_lo <- db %>% 
-  left_join(regions)
+  left_join(regions) %>% 
+  filter(!region == "HEL")
 
 write.csv(db_lo, "data/site_net_locs.csv", row.names = FALSE)
 
@@ -211,9 +212,9 @@ all_flying_times <- plant_bee_table %>%
   dplyr::select(Day0, Mon0, Yr0, bee_sp) %>% 
   dplyr::mutate(date = paste(Day0, Mon0, Yr0, sep = "-")) %>% 
   dplyr::mutate(date = dmy(date)) %>% 
-  dplyr::mutate(month = month(date)) %>% 
-  group_by(bee_sp) %>% 
-  summarise(min = min(month),max =  max(month)) %>% 
+  dplyr::mutate(month = month(date), week = week(date)) %>% 
+  dplyr::group_by(bee_sp) %>% 
+  dplyr::summarise(min = min(week),max =  max(week)) %>% 
   filter(bee_sp %in% unique(db3$bee_sp)) %>% 
   split(.$bee_sp) %>% 
   map(~seq(.x$min, .x$max, 1))
@@ -222,9 +223,9 @@ all_flowering_times <- plant_bee_table %>%
   dplyr::select(Day0, Mon0, Yr0, plant_sp) %>% 
   dplyr::mutate(date = paste(Day0, Mon0, Yr0, sep = "-")) %>% 
   dplyr::mutate(date = dmy(date)) %>% 
-  dplyr::mutate(month = month(date)) %>% 
-  group_by(plant_sp) %>% 
-  summarise(min = min(month),max =  max(month)) %>% 
+  dplyr::mutate(month = month(date), week = week(date)) %>% 
+  dplyr::group_by(plant_sp) %>% 
+  dplyr::summarise(min = min(week),max =  max(week)) %>% 
   dplyr::mutate(plant_sp = str_replace(plant_sp, " ", "\n")) %>% 
   filter(plant_sp %in% unique(db3$plant_sp)) %>% 
   split(.$plant_sp) %>% 

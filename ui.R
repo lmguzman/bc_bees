@@ -23,7 +23,12 @@ nice_locations <- unique(db$ecosection_nm)
 shinyUI(dashboardPage(
 
     # Application title
-    dashboardHeader(title= "Pollinators of \nBritish Columbia", titleWidth = 300),
+    dashboardHeader(title= "Pollinators of \nBritish Columbia", titleWidth = 300,
+                    tags$li(a(href = 'http://www.sfu.ca',
+                              img(src = 'sfu_logo.png',
+                                  title = "Company Home", height = "40px"),
+                              style = "padding-top:5px; padding-bottom:5px;"),
+                            class = "dropdown")),
 
     # Sidebar with a slider input for number of bins
     dashboardSidebar(width = 450, 
@@ -71,8 +76,18 @@ shinyUI(dashboardPage(
 
         # Show a plot of the generated distribution
         dashboardBody(
-            fluidRow(
-              girafeOutput("plot1"))
+            
+            tabsetPanel(type = "tabs",
+                        tabPanel("Plot", girafeOutput("plot1")),
+                        #tabPanel("Summary", verbatimTextOutput("summary")),
+                        tabPanel("Contributors", 
+                                 h4("Developers:"),
+                                 p("This app is developed by Dr. Laura Melissa Guzman, Tyler Kelly, Dr. Leithen M'Gonigle, Dr. Lora Morandin and Dr. Elizabeth Elle in collaboration with Pollination Partnership and the Native Bee Society"),
+                                 h4("Data contributors:"),
+                                 p("The data for this app was collected by Dr. Elizabeth Elle"),
+                                 h4("References:"),
+                                 p(""))
+            )
         
          )
     )

@@ -31,7 +31,7 @@ sections <- readOGR("data/ERC_ECOSECTIONS_SP/ERC_ECOSEC_polygon.shp", stringsAsF
 sections@data <- sections@data %>%
   dplyr::rename("ecosection_cd" = ECOSEC_CD, "ecosection_nm" = ECOSEC_NM)
 
-target2 <- c("SGI", "NAL", "LIM", "FRL", "OKR", "SOB", "SPR", "LIM", "HEL")
+target2 <- c("SGI", "NAL", "LIM", "FRL", "OKR", "SOB", "SPR", "LIM")
 ecosec <- subset(sections, ecosection_cd %in% target2)
 plot(ecosec, axes = T)
 
@@ -65,7 +65,7 @@ db <- read.csv("data/site_net.csv", stringsAsFactors = FALSE)
 
 unique_locs <- db %>% 
   select(decimal_lat, decimal_lon) %>% 
-  unique()
+  unique() 
 
 points_in_df <- data.frame()
 
@@ -79,17 +79,6 @@ for(p in 1:length(eco1@polygons[[1]]@Polygons)){
   points_in <- point.in.polygon(unique_locs$decimal_lon, unique_locs$decimal_lat,  coords_eco[,1],         coords_eco[,2], mode.checked=FALSE)
   points_in_df <- bind_rows(points_in_df, data.frame(index = 1:length(points_in), points_in, i))
 }
-
-i <- 9
-eco1 <- subset(ecosec_map, ecosection_cd %in% target2[i])
-plot(eco1, axes = T)
-
-for(p in 1:length(eco1@polygons[[1]]@Polygons)){
-    coords_eco <- eco1@polygons[[1]]@Polygons[[p]]@coords
-  points_in <- point.in.polygon(unique_locs$decimal_lon, unique_locs$decimal_lat,  coords_eco[,1],         coords_eco[,2], mode.checked=FALSE)
-  points_in_df <- bind_rows(points_in_df, data.frame(index = 1:length(points_in), points_in, i))
-}
-
 
 
 for(i in 2:8){
@@ -121,7 +110,8 @@ new_regions <- unique_locs %>%
   mutate(region = ifelse(index %in% c(114), "LIM", region)) %>% 
   left_join(select(ecosec_data, ecosection_cd, ecosection_nm), by = c('region' = 'ecosection_cd')) %>% 
   mutate(ecosection_nm = ifelse(region == "USA", "United States", ecosection_nm)) %>% 
-  select(decimal_lat, decimal_lon, region, ecosection_nm)
+  select(decimal_lat, decimal_lon, region, ecosection_nm) %>% 
+  
 
 write.csv(new_regions, "data/new_regions.csv", row.names = FALSE)
 

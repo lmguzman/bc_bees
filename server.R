@@ -37,7 +37,7 @@ sections@data <- sections@data %>%
   dplyr::rename("ecosection_cd" = ECOSEC_CD,
                 "ecosection_nm" = ECOSEC_NM)
 
-target2 <- c("SGI", "NAL", "LIM", "FRL", "OKR", "SOB", "SPR", "LIM", "HEL")
+target2 <- c("SGI", "NAL", "LIM", "FRL", "OKR", "SOB", "SPR", "LIM")
 ecosec <- subset(sections, ecosection_cd %in% target2)
 
 
@@ -51,7 +51,7 @@ ecosec_map <- spTransform(ecosec, CRS("+proj=longlat +datum=WGS84 +no_defs +ellp
 
 eco_map <- leaflet(data = ecosec_map)
 
-pal <- c("#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17")
+pal <- c("#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17", "#004F2D")
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
@@ -191,9 +191,9 @@ shinyServer(function(input, output, session) {
           fil2_db <- fil_db[fil_db$plant_sp %in% pl_sp,]
           
           fil_bloom_times <- bloom.times.act[pl_sp] %>% 
-            map_df(~data.frame(month = .x), .id = 'plant_sp') %>% 
+            map_df(~data.frame(week = .x), .id = 'plant_sp') %>% 
             left_join(fil2_db) %>% 
-            dplyr::select(plant_sp, month, plant_common) %>% 
+            dplyr::select(plant_sp, week, plant_common) %>% 
             unique()
           
           })
@@ -212,24 +212,33 @@ shinyServer(function(input, output, session) {
         plant_order <- fil2_db %>% 
           dplyr::count(plant_sp) %>%
           arrange(n)
+    
         
         if(input$maximizer == "Phenological coverage"){
           if(names_to_use == "Common names"){
-            max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = month, y = plant_common), shape = 15, size = 10, colour = "#FCBA04") +
-              theme_cowplot() + scale_x_continuous(limits = c(1,12), breaks = c(1:12), labels = c("Jan", "Feb", "Mar",
-                                                                                                  "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
+            max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_common), shape = 15, size = 10, colour = "#FCBA04") +
+              theme_cowplot() + scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar",
+                                                                                                        "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+                                                   sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
               xlab("") + ylab("")
           }
-          max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = month, y = plant_sp), shape = 15, size = 10, colour = "#FCBA04") +
-            theme_cowplot() + scale_x_continuous(limits = c(1,12), breaks = c(1:12), labels = c("Jan", "Feb", "Mar",
-                                                                                                "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
+          max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_sp), shape = 15, size = 10, colour = "#FCBA04") +
+            theme_cowplot() + scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar",
+                                                                                                "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+                                                 sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
             xlab("") + ylab("")
         }else{
           max_plot <- ggplot(fil2_db) + geom_bar(aes(x = plant_sp, fill = bee_guild)) + coord_flip() +
             theme_cowplot() + scale_fill_viridis_d(name = "Type of \n pollinator") +
-            xlab("") + ylab("Number of recorded observations") + scale_x_discrete(limits = plant_order$plant_sp) 
+            xlab("") + ylab("Number of recorded observations") + scale_x_discrete(limits = plant_order$plant_sp)  
         }
          
+        max_plot <- max_plot +
+          theme(axis.text = element_text(size = 20),
+                axis.title = element_text(size = 20),
+                legend.text = element_text(size = 20),
+                legend.title = element_text(size = 20))
+        
         max_plot <- girafe(ggobj = max_plot, width_svg = 20, height_svg = 13) %>%
           girafe_options(.,
                          opts_tooltip(opacity = .7),
