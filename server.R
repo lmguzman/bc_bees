@@ -221,12 +221,13 @@ shinyServer(function(input, output, session) {
                                                                                                         "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
                                                    sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
               xlab("") + ylab("")
+          }else{
+            max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_sp), shape = 15, size = 10, colour = "#FCBA04") +
+              theme_cowplot() + scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar",
+                                                                                                        "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+                                                   sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
+              xlab("") + ylab("")
           }
-          max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_sp), shape = 15, size = 10, colour = "#FCBA04") +
-            theme_cowplot() + scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar",
-                                                                                                "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
-                                                 sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
-            xlab("") + ylab("")
         }else{
           max_plot <- ggplot(fil2_db) + geom_bar(aes(x = plant_sp, fill = bee_guild)) + coord_flip() +
             theme_cowplot() + scale_fill_viridis_d(name = "Type of \n pollinator") +
@@ -526,12 +527,13 @@ shinyServer(function(input, output, session) {
                                                                                                       "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
                                                  sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
             xlab("") + ylab("")
+        }else{
+          max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_sp), shape = 15, size = 10, colour = "#FCBA04") +
+            theme_cowplot() + scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar",
+                                                                                                      "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+                                                 sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
+            xlab("") + ylab("")
         }
-        max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_sp), shape = 15, size = 10, colour = "#FCBA04") +
-          theme_cowplot() + scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar",
-                                                                                                    "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
-                                               sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
-          xlab("") + ylab("")
       
         
         max_plot <- max_plot +
