@@ -22,9 +22,32 @@ library(Hmisc)
 library(ggiraph)
 library(gridExtra)
 library(htmlwidgets)
+library(forcats)
 source("R/functions.R")
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
+
+db <- db %>%
+  dplyr::mutate(bee_guild = case_when(bee_common == "Sand wasps" ~ "otherhym",
+                               TRUE ~  as.character(bee_guild))) %>%
+  dplyr::mutate(bee_guild_otro = case_when(bee_guild == "bombyliidae" ~ "Flower flies", 
+                                    bee_guild == "andrenidae" ~ "Mining bees",
+                                    bee_guild == "syrphidae" ~ "Flower flies",
+                                    bee_guild == "otherfly" ~ "Flies",
+                                    bee_common == "Bumble bees" ~ "Bumble bees",
+                                    bee_guild == "apidae" & bee_common != "Bumble bees" & bee_common != "Honey bee"~ "Other bees",
+                                    bee_common == "Honey bee" ~ "Honey bees",
+                                    bee_guild == "megachilidae" ~ "Mason & Leafcutter bees",
+                                    bee_guild == "halictidae" ~ "Sweat bees",
+                                    bee_guild == "colletidae" ~ "Other bees",
+                                    bee_guild == "lepidoptera" ~ "Moths & Butterflies",
+                                    bee_guild == "coleoptera" ~ "Beetles",
+                                    bee_guild == "otherhym" ~ "Wasps",
+                                    bee_guild == "aves" ~ "Birds",
+                                    TRUE ~ "Uncommon visitors")) %>%
+  dplyr::mutate(bee_guild_otro = factor(bee_guild_otro, levels = c("Honey bees", "Bumble bees", "Mason & Leafcutter bees", "Mining bees",
+                                             "Sweat bees", "Other bees", "Flower flies", "Flies", "Wasps", "Beetles", "Moths & Butterflies", "Birds")))
+  
 
 all_flowering_times <- readRDS("data/all_flowering_times.rds")
 
@@ -151,12 +174,14 @@ shinyServer(function(input, output, session) {
         if(input$maximizer == "Pollinator abundance"){
             
             pl_sp <- names(sort(table(fil_db$plant_sp), decreasing = TRUE)[1:n_plants])
+            
         }else if(input$maximizer == "Pollinator diversity"){
             
             tb <- table(fil_db$plant_sp, fil_db$bee_sp)
             tb[tb > 0] <- 1
             
             pl_sp <- names(sort(rowSums(tb), decreasing = TRUE)[1:n_plants])
+            
         }else if(input$maximizer == "Phenological coverage"){
           
           flight.times.act <- all_flying_times[unique(fil_db$bee_sp)]
@@ -229,9 +254,15 @@ shinyServer(function(input, output, session) {
               xlab("") + ylab("")
           }
         }else{
-          max_plot <- ggplot(fil2_db) + geom_bar(aes(x = plant_sp, fill = bee_guild)) + coord_flip() +
-            theme_cowplot() + scale_fill_viridis_d(name = "Type of \n pollinator") +
-            xlab("") + ylab("Number of recorded observations") + scale_x_discrete(limits = plant_order$plant_sp)  
+          #fil2_db
+          
+          max_plot <- ggplot(fil2_db) + geom_bar(aes(x = plant_sp, fill = bee_guild_otro)) + coord_flip() +
+            theme_cowplot() + scale_fill_manual(name = "Type of \n pollinator", breaks = c("Honey bees", "Bumble bees", "Mason & Leafcutter bees", "Mining bees", "Sweat bees", "Other bees", 
+                                                           "Flower flies", "Flies", "Wasps", "Beetles", "Moths & Butterflies", "Birds"), 
+                                                values=c("#08306b", "#08519c", "#2171b5", "#6baed6", "#9ecae1", "#deebf7", 
+                                                         "#c7e9c0", "#a1d99b", "#41ab5d", "#238b45", "#006d2c", "#00441b")) +
+            #scale_fill_viridis_d(name = "Type of \n pollinator") +
+            xlab("") + ylab("Number of recorded observations") + scale_x_discrete(limits = plant_order$plant_sp)
         }
          
         max_plot <- max_plot +
@@ -428,7 +459,7 @@ shinyServer(function(input, output, session) {
             geom_text(aes(label = label), color = "black", size = 9) + 
             labs(caption = "Click on circle to go Wikipedia page!") +
             theme(legend.text = element_text(color = "red", size = 30),
-                  legend.position = c(.85, 0.0),
+                  legend.position = c(.8, 0.0),
                   legend.direction = "horizontal",
                   plot.caption = element_text(color = "black", size = 20, hjust = 0))
           
@@ -513,12 +544,11 @@ shinyServer(function(input, output, session) {
 
         pl_sp <-colnames(v.mat.act)[which(res$best.model)]
 
-        
         fil2_db <- fil_db[fil_db$plant_sp %in% pl_sp,]
         
         fil2_db_wcrop <- rbind(fil2_db, fil_db_crop)
         
-        bloom.times.act <-  c(bloom.times.crop, bloom.times.act[pl_sp])
+        bloom.times.act <- c(bloom.times.crop, bloom.times.act[pl_sp])
         
         pl_sp <- append(pl_sp, names(bloom.times.crop)[1])
 

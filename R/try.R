@@ -1,20 +1,23 @@
 input <- NULL
 
 input$region <- "All"
+input$name_type <- "Scientific names"
+input$native <- c("Native")
+input$n_plants <- 10
+input$maximizer <- "Pollinator abundance"
+
+#testing
+pl_sp <- colnames(v.mat.act)[c(1,10, 50, 20)]
 
 input$net_type <- "Plant"
 input$net_type <- "Pollinator"
-input$name_type <- "Scientific names"
+
 input$plants <- c("Abelia")
 input$plants <- c("Abelia", "Mahonia\naquifolium", "Collinsia\nparviflora")
  
 input$maximizer <-  "Pollinator abundance"
 input$maximizer <-  "Phenological Coverage"
  
-input$n_plants <- 10
- 
- input$native <- c("Native")
-
 input$name_type <- "Scientific names"
 input$bees <- c("Adela\nseptentrionella")
 
@@ -262,4 +265,33 @@ max_plot <- girafe(ggobj = max_plot, width_svg = 20, height_svg = 13) %>%
                  opts_zoom(min = .5, max = 4),
                  sizingPolicy(defaultWidth = "100%", defaultHeight = "300px"))
 max_plot
-})
+
+
+###############################################################################
+
+unique(db$bee_guild)
+
+db %>%
+  mutate(bee_guild = case_when(bee_common == "Sand wasps" ~ "otherhym",
+                               TRUE ~  as.character(bee_guild))) %>%
+  mutate(bee_guild_otro = case_when(bee_guild == "bombyliidae" ~ "Flower flies", 
+                               bee_guild == "andrenidae" ~ "Mining bees",
+                               bee_guild == "syrphidae" ~ "Flower flies",
+                               bee_guild == "otherfly" ~ "Flies",
+                               bee_common == "Bumble bees" ~ "Bumble bees",
+                               bee_guild == "apidae" & bee_common != "Bumble bees" & bee_common != "Honey bee"~ "Other bees",
+                               bee_common == "Honey bee" ~ "Honey bees",
+                               bee_guild == "megachilidae" ~ "Mason & leafcutter bees",
+                               bee_guild == "halictidae" ~ "Sweat bees",
+                               bee_guild == "colletidae" ~ "Other bees",
+                               bee_guild == "lepidoptera" ~ "Moths & Butterflies",
+                               bee_guild == "coleoptera" ~ "Beetles",
+                               bee_guild == "otherhym" ~ "Wasps",
+                               bee_guild == "aves" ~ "Birds",
+                               TRUE ~ "Uncommon visitors")) %>% View()
+  
+
+
+
+
+##############################################################################
