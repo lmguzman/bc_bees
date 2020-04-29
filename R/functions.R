@@ -265,3 +265,93 @@ find.mix <- function(f=f,
                 fitness=f, v.mat, bloom.times)
   colnames(v.mat)[which(res$best.model)]
 }
+
+
+
+
+
+
+
+
+
+### forcing including crop ###
+
+ga.step.2 <- function(N, state, s, p.mutate, p.sex, p.rec, fitness, v.mat, bloom.times, crop.n) {
+  ## Mutation
+  state.m <- update.state(state, mutate.2(state=state,
+                                        p.mutate=p.mutate,
+                                        fitness=fitness, v.mat, bloom.times, crop.n))
+  
+  ## Selection
+  state.s <- update.state(state, select(state=state.m, s=s))
+  
+  ## Recombination
+  state.r <- update.state(state, recombine(N, state=state.s,
+                                           popn0=state$popn,
+                                           p.sex=p.sex, p.rec=p.rec,
+                                           fitness=fitness, v.mat, bloom.times))
+  state.r
+}
+
+
+initial.popn.2 <- function(N, n.plants, n.plants.tot, fitness, v.mat, bloom.times, crop){
+  
+  crop.n <- which(names(bloom.times) == crop)
+  
+  make.model <- function(x, n.plants, n.plants.tot) {
+    m <- rep(FALSE, n.plants.tot)
+    m[sample(n.plants.tot, n.plants)] <- TRUE
+    m[crop.n] <- TRUE
+    m
+  }
+  
+  popn <- lapply(1:N, make.model, n.plants, n.plants.tot)
+  w <- sapply(popn, fitness, v.mat, bloom.times)
+  list(popn=popn,
+       w=w,
+       best.w=max(w),
+       best.model=popn[[which.max(w)]])
+}
+
+state <- initial.popn.2(N, n.plants, n.plants.tot,
+                  fitness=fitness, v.mat, bloom.times,crop)
+out <- vector("numeric", n.gens)
+for ( i in seq_len(n.gens) ){
+  x <- ga.step.2(N, x, s, p.mutate, p.sex, p.rec, fitness, v.mat, bloom.times, crop.n)
+  out[i] <- x$best.w
+}
+
+
+mutate.1.2 <- function(x, n.mutants, crop.n) {
+  if(n.mutants > sum(x))
+    cat("Mutation rate too high. Too many mutants\n")
+  
+  x1 <- sample(which(x)[which(x) != crop.n], size=n.mutants)
+  x2 <- sample(which(!x), size=n.mutants)
+  x[x1] <- FALSE
+  x[x2] <- TRUE
+  x
+}
+
+mutate.2 <- function(state, p.mutate, fitness, v.mat, bloom.times, crop.n) {
+  
+  popn <- state$popn
+  w <- state$w
+  nmutants <- rbinom(length(popn), length(popn[[1]]), p.mutate)
+  nmutants <- sapply(nmutants, function(x) min(sum(popn[[1]]), x))
+  mutated <- which(nmutants>0)
+  
+  if ( length(mutated) > 0 ) {
+    popn[mutated] <-
+      mapply(mutate.1.2, popn[mutated], nmutants[mutated],
+             SIMPLIFY=FALSE, crop.n)
+    w[mutated] <- sapply(popn[mutated], fitness, v.mat, bloom.times)
+  }
+  list(popn=popn,
+       w=w,
+       best.w=state$best.w,
+       best.model=state$best.model)
+}
+
+
+
