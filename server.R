@@ -401,7 +401,7 @@ shinyServer(function(input, output, session) {
                           edge.size = "eSize",
                           edge.color = "eColor",
                           palette = col,
-                          size = 5)$data
+                          size = 10)$data
           
           # ggdata$color[ggdata$label == " "] <- NA
           # ggdata$alpha[ggdata$label == " "] <- NA
@@ -425,9 +425,14 @@ shinyServer(function(input, output, session) {
             geom_point(aes(color = color), size = 12, color = "white") +
             geom_point(aes(color = color), size = 12, alpha = .75) +
             geom_point_interactive(aes(color = color, tooltip = ggdata$alpha, data_id = ggdata$alpha, onclick = ggdata$onclick), size = 30) +
-            geom_text(aes(label = label), color = "black", size = 9)
+            geom_text(aes(label = label), color = "black", size = 9) + 
+            labs(caption = "Click on circle to go Wikipedia page!") +
+            theme(legend.text = element_text(color = "red", size = 30),
+                  legend.position = c(.85, 0.0),
+                  legend.direction = "horizontal",
+                  plot.caption = element_text(color = "black", size = 20, hjust = 0))
           
-          gg <- girafe(ggobj = gg, width_svg = 20, height_svg = 13) %>% 
+          gg <- girafe(ggobj = gg, width_svg = 20, height_svg = 17) %>% 
             girafe_options(.,
                          opts_tooltip(opacity = .7),
                          opts_zoom(min = .5, max = 4),
@@ -440,10 +445,9 @@ shinyServer(function(input, output, session) {
 
     })
 
-    plot_crop <- eventReactive(c(
-      input$go2
-    ),{
-      
+    plot_crop <- eventReactive(ignoreNULL = TRUE, ignoreInit = TRUE,
+      input$go2,{
+        
       crop_type <- input$crop
       
       if(crop_type == 'Cranberry'){crop_type <- "Blueberry"}
@@ -454,10 +458,11 @@ shinyServer(function(input, output, session) {
       fil_db_1 <- db[db$bee_sp %in% bees_crop,]
       
       fil_db <- fil_db_1[fil_db_1$plant_common != crop_type,]
+      fil_db_crop <-fil_db_1[fil_db_1$plant_common == crop_type,]
       
-      plant_native <- if(all(input$native == "Native")){
+      plant_native <- if(all(input$native_2 == "Native")){
         c("native", "both")
-      }else if(all(input$native == "Non-Native")){
+      }else if(all(input$native_2 == "Non-Native")){
         c("non-native", "both")
       }else{
         c("native", "non-native", "both")
@@ -467,20 +472,20 @@ shinyServer(function(input, output, session) {
         fil_db <- fil_db[fil_db$plant_native %in% plant_native,]
       }
       
-      if(!is.null(input$shrub)){
-        fil_db <- fil_db[fil_db$plant_life_form %in% input$shrub,]
+      if(!is.null(input$shrub_2)){
+        fil_db <- fil_db[fil_db$plant_life_form %in% input$shrub_2,]
       }
       
+      n_plants_2 <- input$n_plants_2
       
-      n_plants <- input$n_plants
-      
-      if(length(unique(fil_db$plant_sp)) < n_plants){
-        n_plants <- length(unique(fil_db$plant_sp))
+      if(length(unique(fil_db$plant_sp)) < n_plants_2){
+        n_plants_2 <- length(unique(fil_db$plant_sp))
       }
       
       flight.times.act <- all_flying_times[unique(fil_db$bee_sp)]
       
-      bloom.times.act <- all_flowering_times[unique(fil_db$plant_sp)] 
+      bloom.times.act <- all_flowering_times[unique(fil_db$plant_sp)]
+      bloom.times.crop <- all_flowering_times[unique(fil_db_crop$plant_sp)]
       
       v.mat.act <- dplyr::select(fil_db, plant_sp, bee_sp) %>% 
         unique() %>% dplyr::mutate(int = 1) %>% 
@@ -491,7 +496,7 @@ shinyServer(function(input, output, session) {
       withProgress(message = 'Making plot', value = 0, {
         
         n.gens = 1000
-        x.in <- initial.popn(N = 100, n.plants = n_plants, n.plants.tot = ncol(v.mat.act),
+        x.in <- initial.popn(N = 100, n.plants = n_plants_2, n.plants.tot = ncol(v.mat.act),
                              fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act)
         out <- vector("numeric", n.gens)
         for(i in seq_len(n.gens)){
@@ -508,33 +513,57 @@ shinyServer(function(input, output, session) {
 
         pl_sp <-colnames(v.mat.act)[which(res$best.model)]
 
-
+        
         fil2_db <- fil_db[fil_db$plant_sp %in% pl_sp,]
+        
+        fil2_db_wcrop <- rbind(fil2_db, fil_db_crop)
+        
+        bloom.times.act <-  c(bloom.times.crop, bloom.times.act[pl_sp])
+        
+        pl_sp <- append(pl_sp, names(bloom.times.crop)[1])
 
-        fil_bloom_times <- bloom.times.act[pl_sp] %>%
+        fil_bloom_times <- bloom.times.act %>%
           map_df(~data.frame(week = .x), .id = 'plant_sp') %>%
-          left_join(fil2_db) %>%
+          left_join(fil2_db_wcrop) %>%
           dplyr::select(plant_sp, week, plant_common) %>%
           unique()
         
-        fil2_db <- fil_db[fil_db$plant_sp %in% pl_sp,]
+        fil_bloom_times <- fil_bloom_times %>% 
+          dplyr::mutate(category = case_when(plant_common == "Blueberry" ~ "Crop",
+                                      plant_common == "Apples" ~ "Crop",
+                                      plant_common != "Blueberry" ~ "Other"))
         
         names_to_use <- input$name_type
         
+        
         if(names_to_use == "Common names"){
-          max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_common), shape = 15, size = 10, colour = "#FCBA04") +
-            theme_cowplot() + scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar",
-                                                                                                      "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
-                                                 sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
+          
+          max_plot <- ggplot(fil_bloom_times) + 
+            geom_point(aes(x = week, y = plant_common, colour = category), shape = 15, size = 10) +
+            theme_cowplot() + 
+            scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), 
+                               labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+                               sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
             xlab("") + ylab("")
-        }else{
-          max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_sp), shape = 15, size = 10, colour = "#FCBA04") +
-            theme_cowplot() + scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar",
-                                                                                                      "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
-                                                 sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
+          
+          max_plot <- max_plot + 
+            scale_color_manual(values = c("Crop" = "#3182bd", "Other" = "#2ca25f")) + 
+            theme(legend.position = "none")
+        
+          }else{
+          max_plot <- ggplot(fil_bloom_times, palette = col) + 
+            geom_point(aes(x = week, y = plant_sp, colour = category), shape = 15, size = 10) +
+            theme_cowplot() + 
+            scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), 
+                               labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+                                sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
             xlab("") + ylab("")
+          
+          max_plot <- max_plot + 
+            scale_color_manual(values = c("Crop" = "#3182bd", "Other" = "#2ca25f")) + 
+            theme(legend.position = "none")
+          
         }
-      
         
         max_plot <- max_plot +
           theme(axis.text = element_text(size = 20),

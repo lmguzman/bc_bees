@@ -76,13 +76,13 @@ shinyUI(dashboardPage(
                              selectInput(inputId = 'crop',
                                          label = 'Crop:',
                                          choices = c("Blueberry", 'Cranberry', 'Apple')),
-                             checkboxGroupInput(inputId = "native",
+                             checkboxGroupInput(inputId = "native_2",
                                                 label = 'Use native plants only?',
                                                 choices = c("Native", "Non-Native")),
-                             checkboxGroupInput(inputId = "shrub",
+                             checkboxGroupInput(inputId = "shrub_2",
                                                 label = 'Which types of plants do you want to use?',
                                                 choices = c("Herb","Shrub","Vine","Tree","Various")),
-                             numericInput("n_plants", "Number of plants:", 10, min = 2, max = 100),
+                             numericInput("n_plants_2", "Number of plants:", 10, min = 4, max = 100),
                              actionButton("go2", "Go"))
         ),
 
