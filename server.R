@@ -195,14 +195,14 @@ shinyServer(function(input, output, session) {
             as.matrix()
           
           #pl_sp <- find.mix(f=abundance.phenology.richness, k=n_plants, v.mat = v.mat.act, bloom.times = bloom.times.act, N = 100)
-          withProgress(message = 'Making plot', value = 0, {
+          withProgress(message = 'Running algorithm', value = 0, {
           
-          n.gens = 1000
-          x.in <- initial.popn(N = 100, n.plants = n_plants, n.plants.tot = ncol(v.mat.act),
+          n.gens = 300
+          x <- initial.popn(N = 100, n.plants = n_plants, n.plants.tot = ncol(v.mat.act),
                             fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act)
           out <- vector("numeric", n.gens)
           for ( i in seq_len(n.gens) ){
-            x <- ga.step(N = 100, state = x.in, s = 5, p.mutate = 0.01, p.sex = 0.5, p.rec =  0.25, fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act)
+            x <- ga.step(N = 100, state = x, s = 5, p.mutate = 0.01, p.sex = 0.5, p.rec =  0.25, fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act)
             out[i] <- x$best.w
             
             incProgress(1/n.gens, detail = paste("Doing part", i))
@@ -488,7 +488,6 @@ shinyServer(function(input, output, session) {
       
       fil_db_1 <- db[db$bee_sp %in% bees_crop,]
       
-      fil_db <- fil_db_1[fil_db_1$plant_common != crop_type,]
       fil_db_crop <-fil_db_1[fil_db_1$plant_common == crop_type,]
       
       plant_native <- if(all(input$native_2 == "Native")){
@@ -500,47 +499,91 @@ shinyServer(function(input, output, session) {
       }
       
       if(!is.null(plant_native)){
-        fil_db <- fil_db[fil_db$plant_native %in% plant_native,]
+        fil_db_1 <- fil_db_1[fil_db_1$plant_native %in% plant_native,]
       }
       
       if(!is.null(input$shrub_2)){
-        fil_db <- fil_db[fil_db$plant_life_form %in% input$shrub_2,]
+        fil_db_1 <- fil_db_1[fil_db_1$plant_life_form %in% input$shrub_2,]
       }
       
       n_plants_2 <- input$n_plants_2
       
-      if(length(unique(fil_db$plant_sp)) < n_plants_2){
-        n_plants_2 <- length(unique(fil_db$plant_sp))
+      if(length(unique(fil_db_1$plant_sp)) < n_plants_2){
+        n_plants_2 <- length(unique(fil_db_1$plant_sp))
       }
       
-      flight.times.act <- all_flying_times[unique(fil_db$bee_sp)]
-      
-      bloom.times.act <- all_flowering_times[unique(fil_db$plant_sp)]
-      bloom.times.crop <- all_flowering_times[unique(fil_db_crop$plant_sp)]
-      
-      v.mat.act <- dplyr::select(fil_db, plant_sp, bee_sp) %>% 
-        unique() %>% dplyr::mutate(int = 1) %>% 
-        spread(key = 'plant_sp', value = int, fill = 0) %>% 
-        tibble::column_to_rownames('bee_sp') %>% 
-        as.matrix()
-      
-      withProgress(message = 'Making plot', value = 0, {
+      if(input$overlap_2 == 'Yes'){
         
-        n.gens = 1000
-        x.in <- initial.popn(N = 100, n.plants = n_plants_2, n.plants.tot = ncol(v.mat.act),
-                             fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act)
-        out <- vector("numeric", n.gens)
-        for(i in seq_len(n.gens)){
-          x <- ga.step(N = 100, state = x.in, s = 5, p.mutate = 0.01, p.sex = 0.5, p.rec =  0.25, fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act)
-          out[i] <- x$best.w
+        fil_db <- fil_db_1[fil_db_1$plant_common != crop_type,]
+      
+        flight.times.act <- all_flying_times[unique(fil_db$bee_sp)]
+        
+        bloom.times.act <- all_flowering_times[unique(fil_db$plant_sp)]
+        
+        v.mat.act <- dplyr::select(fil_db, plant_sp, bee_sp) %>% 
+          unique() %>% dplyr::mutate(int = 1) %>% 
+          spread(key = 'plant_sp', value = int, fill = 0) %>% 
+          tibble::column_to_rownames('bee_sp') %>% 
+          as.matrix()
+        
+        withProgress(message = 'Running algorithm', value = 0, {
           
-          incProgress(1/n.gens, detail = paste("Doing part", i))
+          n.gens = 300
+          x <- initial.popn(N = 100, n.plants = n_plants_2, n.plants.tot = ncol(v.mat.act),
+                               fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act)
+          out <- vector("numeric", n.gens)
+          for(i in seq_len(n.gens)){
+            x <- ga.step(N = 100, state = x, s = 5, p.mutate = 0.01, p.sex = 0.5, p.rec =  0.25, fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act)
+            out[i] <- x$best.w
+            
+            incProgress(1/n.gens, detail = paste("Doing part", i))
+            
+          }
           
+        })
+        
+        
+      }else if(input$overlap_2 == 'No'){
+        
+        if(!(crop_type %in% unique(fil_db_1$plant_common))){
+          fil_db <- rbind(fil_db_1, fil_db_crop)
+        }else{
+          fil_db <- fil_db_1
         }
         
-      })
+        crop_name <- unique(fil_db[fil_db$plant_common == crop_type,"plant_sp"])
+        
+        flight.times.act <- all_flying_times[unique(fil_db$bee_sp)]
+        
+        bloom.times.act <- all_flowering_times[unique(fil_db$plant_sp)]
+        
+        v.mat.act <- dplyr::select(fil_db, plant_sp, bee_sp) %>% 
+          unique() %>% dplyr::mutate(int = 1) %>% 
+          spread(key = 'plant_sp', value = int, fill = 0) %>% 
+          tibble::column_to_rownames('bee_sp') %>% 
+          as.matrix()
+        
+        withProgress(message = 'Running algorithm', value = 0, {
+          
+          n.gens = 300
+          x <- initial.popn.2(N = 100, n.plants = n_plants_2, n.plants.tot = ncol(v.mat.act),
+                               fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act, crop = crop_name)
+          out <- vector("numeric", n.gens)
+          for(i in seq_len(n.gens)){
+            x <- ga.step.2(N = 100, state = x, s = 5, p.mutate = 0.01, p.sex = 0.5, p.rec =  0.25, fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act, crop = crop_name)
+            out[i] <- x$best.w
+            
+            incProgress(1/n.gens, detail = paste("Doing part", i))
+            
+          }
+          
+        })
+        
+      }
       
-        res <- list(best.w=x$best.w, best.model=x$best.model, best.w.t=out)
+      bloom.times.crop <- all_flowering_times[unique(fil_db_crop$plant_sp)]
+      
+       res <- list(best.w=x$best.w, best.model=x$best.model, best.w.t=out)
 
         pl_sp <-colnames(v.mat.act)[which(res$best.model)]
 

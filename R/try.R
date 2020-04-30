@@ -144,7 +144,7 @@ db %>%
 input <- NULL
 input$region <- "All"
 input$crop <- "Cranberry"
-input$n_plants_2 <- 4
+input$n_plants_2 <- 10
 input$native_2 <- c("Native")
 input$name_type <- "Common names"
 

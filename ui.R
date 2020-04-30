@@ -82,6 +82,9 @@ shinyUI(dashboardPage(
                              checkboxGroupInput(inputId = "shrub_2",
                                                 label = 'Which types of plants do you want to use?',
                                                 choices = c("Herb","Shrub","Vine","Tree","Various")),
+                             selectInput(inputId = "overlap_2",
+                                                label = 'Should plants overlap with crop?',
+                                                choices = c("Yes", "No")),
                              numericInput("n_plants_2", "Number of plants:", 10, min = 4, max = 100),
                              actionButton("go2", "Go"))
         ),
