@@ -27,28 +27,6 @@ source("R/functions.R")
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
 
-db <- db %>%
-  dplyr::mutate(bee_guild = case_when(bee_common == "Sand wasps" ~ "otherhym",
-                               TRUE ~  as.character(bee_guild))) %>%
-  dplyr::mutate(bee_guild_otro = case_when(bee_guild == "bombyliidae" ~ "Flower flies", 
-                                    bee_guild == "andrenidae" ~ "Mining bees",
-                                    bee_guild == "syrphidae" ~ "Flower flies",
-                                    bee_guild == "otherfly" ~ "Flies",
-                                    bee_common == "Bumble bees" ~ "Bumble bees",
-                                    bee_guild == "apidae" & bee_common != "Bumble bees" & bee_common != "Honey bee"~ "Other bees",
-                                    bee_common == "Honey bee" ~ "Honey bees",
-                                    bee_guild == "megachilidae" ~ "Mason & Leafcutter bees",
-                                    bee_guild == "halictidae" ~ "Sweat bees",
-                                    bee_guild == "colletidae" ~ "Other bees",
-                                    bee_guild == "lepidoptera" ~ "Moths & Butterflies",
-                                    bee_guild == "coleoptera" ~ "Beetles",
-                                    bee_guild == "otherhym" ~ "Wasps",
-                                    bee_guild == "aves" ~ "Birds",
-                                    TRUE ~ "Uncommon visitors")) %>%
-  dplyr::mutate(bee_guild_otro = factor(bee_guild_otro, levels = c("Honey bees", "Bumble bees", "Mason & Leafcutter bees", "Mining bees",
-                                             "Sweat bees", "Other bees", "Flower flies", "Flies", "Wasps", "Beetles", "Moths & Butterflies", "Birds")))
-  
-
 all_flowering_times <- readRDS("data/all_flowering_times.rds")
 
 all_flying_times <- readRDS("data/all_flying_times.rds")

@@ -79,14 +79,14 @@ final_locations <- bind_rows(origin_dd, utm_to_decimal_final, degree_to_decimal)
 #### plant bee table
 
 plant_bee_table <- tblMainBee %>%
-  select(BeeID, New.LocID = NewLocID, Yr0, SpID, PlantSpeciesID = FlorNum) %>% 
+  dplyr::select(BeeID, New.LocID = NewLocID, Yr0, SpID, PlantSpeciesID = FlorNum) %>% 
   filter(!is.na(PlantSpeciesID)) %>% 
   filter(!is.na(BeeID)) %>% 
-  left_join(select(tblNames_Species, SpID, GenusName, Species, BeeGenusID)) %>% 
+  left_join(dplyr::select(tblNames_Species, SpID, GenusName, Species, BeeGenusID)) %>% 
   filter(!is.na(BeeGenusID)) %>% 
   left_join(tbl_PlantSpecies) %>% 
   left_join(final_locations) %>% 
-  left_join(select(tblLocation, New.LocID, Location_Desc))
+  left_join(dplyr::select(tblLocation, New.LocID, Location_Desc))
 
 write.csv(plant_bee_table, "data/site_net.csv", row.names = FALSE)
 
@@ -117,12 +117,12 @@ plant_traits <- read.csv("raw_data/elle_plants_full/elle_plants_full-Table 1.csv
   filter(!plant_sp == "Mixed species") %>% 
   filter(!str_detect(plant_sp, "Nest")) %>% 
   filter(!plant_sp == "net") %>% 
-  mutate(plant_sp = ifelse(plant_sp == "Spirea douglasii ssp. Douglasii", "Spiraea douglasii", plant_sp)) %>% 
-  mutate(plant_sp = ifelse(plant_sp == "Symphoricarpus albus", "Symphoricarpos albus", plant_sp)) %>% 
-  mutate(plant_sp = ifelse(plant_sp == "Syringia", "Syringa", plant_sp)) %>% 
-  mutate(plant_sp = ifelse(plant_sp == "Alyssum", "Lobularia", plant_sp)) %>% 
-  mutate(plant_sp = ifelse(plant_sp == "Convulvulus arvensis", "Convolvulus arvensis", plant_sp)) %>% 
-  mutate(plant_sp = ifelse(plant_sp == "Craetagus douglasii", "Crataegus douglasii", plant_sp)) 
+  dplyr::mutate(plant_sp = ifelse(plant_sp == "Spirea douglasii ssp. Douglasii", "Spiraea douglasii", plant_sp)) %>% 
+  dplyr::mutate(plant_sp = ifelse(plant_sp == "Symphoricarpus albus", "Symphoricarpos albus", plant_sp)) %>% 
+  dplyr::mutate(plant_sp = ifelse(plant_sp == "Syringia", "Syringa", plant_sp)) %>% 
+  dplyr::mutate(plant_sp = ifelse(plant_sp == "Alyssum", "Lobularia", plant_sp)) %>% 
+  dplyr::mutate(plant_sp = ifelse(plant_sp == "Convulvulus arvensis", "Convolvulus arvensis", plant_sp)) %>% 
+  dplyr::mutate(plant_sp = ifelse(plant_sp == "Craetagus douglasii", "Crataegus douglasii", plant_sp)) 
 
 bee_names <- read.csv("raw_data/common_names_pol.csv", stringsAsFactors = FALSE)
 
@@ -139,12 +139,12 @@ db_int <- db %>%
   filter(!plant_sp == "Mixed species") %>% 
   filter(!str_detect(plant_sp, "Nest")) %>% 
   filter(!plant_sp == "net") %>% 
-  mutate(plant_sp = ifelse(plant_sp == "Spirea douglasii ssp. Douglasii", "Spiraea douglasii", plant_sp)) %>% 
-  mutate(plant_sp = ifelse(plant_sp == "Symphoricarpus albus", "Symphoricarpos albus", plant_sp)) %>% 
-  mutate(plant_sp = ifelse(plant_sp == "Syringia", "Syringa", plant_sp)) %>% 
-  mutate(plant_sp = ifelse(plant_sp == "Alyssum", "Lobularia", plant_sp)) %>% 
-  mutate(plant_sp = ifelse(plant_sp == "Convulvulus arvensis", "Convolvulus arvensis", plant_sp)) %>% 
-  mutate(plant_sp = ifelse(plant_sp == "Craetagus douglasii", "Crataegus douglasii", plant_sp)) 
+  dplyr::mutate(plant_sp = ifelse(plant_sp == "Spirea douglasii ssp. Douglasii", "Spiraea douglasii", plant_sp)) %>% 
+  dplyr::mutate(plant_sp = ifelse(plant_sp == "Symphoricarpus albus", "Symphoricarpos albus", plant_sp)) %>% 
+  dplyr::mutate(plant_sp = ifelse(plant_sp == "Syringia", "Syringa", plant_sp)) %>% 
+  dplyr::mutate(plant_sp = ifelse(plant_sp == "Alyssum", "Lobularia", plant_sp)) %>% 
+  dplyr::mutate(plant_sp = ifelse(plant_sp == "Convulvulus arvensis", "Convolvulus arvensis", plant_sp)) %>% 
+  dplyr::mutate(plant_sp = ifelse(plant_sp == "Craetagus douglasii", "Crataegus douglasii", plant_sp)) 
 
 bees_great <- db_int %>% 
   group_by(bee_sp) %>% 
@@ -152,9 +152,9 @@ bees_great <- db_int %>%
   filter(n >5)
 
 bee_name_clean <- bees_great %>% 
-  mutate(bee_gen = str_extract(bee_sp, "\\w+")) %>% 
+  dplyr::mutate(bee_gen = str_extract(bee_sp, "\\w+")) %>% 
   left_join(bee_names, by = c("bee_gen" = "Genus")) %>% 
-  left_join(select(bee_traits, insect_sp, insect_order, social, nest_location, larval_diet, insect_guild),
+  left_join(dplyr::select(bee_traits, insect_sp, insect_order, social, nest_location, larval_diet, insect_guild),
             by = c("bee_sp" = "insect_sp")) %>% 
   dplyr::select(-n, -bee_gen) %>% 
   dplyr::rename(bee_common = Common.name, bee_order = insect_order, bee_social = social, bee_nest_location = nest_location,
@@ -166,7 +166,7 @@ plant_great <- db_int %>%
   filter(n >5)
 
 plant_name_clean <- plant_great %>% 
-  mutate(plant_gen = str_extract(plant_sp, "\\w+")) %>% 
+  dplyr::mutate(plant_gen = str_extract(plant_sp, "\\w+")) %>% 
   left_join(plant_names, by = c("plant_gen" = "plant_sp")) %>% 
   left_join(plant_traits, by = c("plant_sp")) %>%
   dplyr::select(plant_sp, plant_common = common.name, plant_order, plant_family, plant_native = native_inv, 
@@ -178,17 +178,37 @@ db2 <- db_int %>%
   filter(plant_sp %in% plant_great$plant_sp) %>% 
   left_join(bee_name_clean) %>% 
   left_join(plant_name_clean) %>% 
-  select(-BeeID, -SpID, -PlantSpeciesID, -BeeGenusID, -Species.CODE) %>% 
-  mutate(plant_sp = str_replace(plant_sp, " ", "\n"), bee_sp = str_replace(bee_sp, " ", "\n")) %>% 
-  mutate(plant_native = ifelse(plant_native == "native*", "non-native", plant_native)) %>% 
-  mutate(plant_native =ifelse(is.na(plant_native), 'both', plant_native)) %>% 
-  mutate(plant_life_form = str_to_sentence(plant_life_form)) %>% 
-  mutate(plant_life_form = ifelse(plant_life_form == "Woody vine", "Vine", plant_life_form)) %>% 
-  mutate(plant_life_form = ifelse(plant_life_form == "Varies", "Various", plant_life_form)) %>% 
-  mutate(plant_life_form = ifelse(plant_life_form == "Shrub or tree", "Shrub", plant_life_form)) %>% 
-  mutate(plant_life_form = ifelse(plant_life_form == "Herb to shrub", "Shrub", plant_life_form)) %>% 
-  mutate(plant_life_form =ifelse(is.na(plant_life_form), 'Herb', plant_life_form))
+  dplyr::select(-BeeID, -SpID, -PlantSpeciesID, -BeeGenusID, -Species.CODE) %>% 
+  dplyr::mutate(plant_sp = str_replace(plant_sp, " ", "\n"), bee_sp = str_replace(bee_sp, " ", "\n")) %>% 
+  dplyr::mutate(plant_native = ifelse(plant_native == "native*", "non-native", plant_native)) %>% 
+  dplyr::mutate(plant_native =ifelse(is.na(plant_native), 'both', plant_native)) %>% 
+  dplyr::mutate(plant_life_form = str_to_sentence(plant_life_form)) %>% 
+  dplyr::mutate(plant_life_form = ifelse(plant_life_form == "Woody vine", "Vine", plant_life_form)) %>% 
+  dplyr::mutate(plant_life_form = ifelse(plant_life_form == "Varies", "Various", plant_life_form)) %>% 
+  dplyr::mutate(plant_life_form = ifelse(plant_life_form == "Shrub or tree", "Shrub", plant_life_form)) %>% 
+  dplyr::mutate(plant_life_form = ifelse(plant_life_form == "Herb to shrub", "Shrub", plant_life_form)) %>% 
+  dplyr::mutate(plant_life_form =ifelse(is.na(plant_life_form), 'Herb', plant_life_form))
 
+db2 <- db2 %>%
+  dplyr::mutate(bee_guild = case_when(bee_common == "Sand wasps" ~ "otherhym",
+                                      TRUE ~  as.character(bee_guild))) %>%
+  dplyr::mutate(bee_guild_otro = case_when(bee_guild == "bombyliidae" ~ "Flower flies", 
+                                           bee_guild == "andrenidae" ~ "Mining bees",
+                                           bee_guild == "syrphidae" ~ "Flower flies",
+                                           bee_guild == "otherfly" ~ "Flies",
+                                           bee_common == "Bumble bees" ~ "Bumble bees",
+                                           bee_guild == "apidae" & bee_common != "Bumble bees" & bee_common != "Honey bee"~ "Other bees",
+                                           bee_common == "Honey bee" ~ "Honey bees",
+                                           bee_guild == "megachilidae" ~ "Mason & Leafcutter bees",
+                                           bee_guild == "halictidae" ~ "Sweat bees",
+                                           bee_guild == "colletidae" ~ "Other bees",
+                                           bee_guild == "lepidoptera" ~ "Moths & Butterflies",
+                                           bee_guild == "coleoptera" ~ "Beetles",
+                                           bee_guild == "otherhym" ~ "Wasps",
+                                           bee_guild == "aves" ~ "Birds",
+                                           TRUE ~ "Uncommon visitors")) %>%
+  dplyr::mutate(bee_guild_otro = factor(bee_guild_otro, levels = c("Honey bees", "Bumble bees", "Mason & Leafcutter bees", "Mining bees",
+                                                                   "Sweat bees", "Other bees", "Flower flies", "Flies", "Wasps", "Beetles", "Moths & Butterflies", "Birds")))
 
 write.csv(db2, "data/site_net_loc_fil.csv", row.names = FALSE)
 
