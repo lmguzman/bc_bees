@@ -1,3 +1,4 @@
+common_names_plants,
 plant_sp,common name
 Abelia,Abelia
 Achillea,Yarrows
@@ -5,8 +6,8 @@ Achlys,Vanilla leaf
 Aegopodium,Ground elder
 Agoseris,Spearleaf mountain dandelion
 Ajuga,Bugleweed
-Allium,Garlic
-Amelanchier,Shadbush
+Allium,Onion
+Amelanchier,Saskatoon
 Anaphalis,Everlastings
 Anenome,Anenome
 Antennaria,Pussytoes
@@ -25,11 +26,11 @@ Balsamorhiza,Balsamroots
 Barbarea,Winter cress
 Bellis,Common daisy
 Borago,Starflower
-Brassica,Cabbages
-Brodiaea,Cluster-lilies
-Buddleja,Summer lilac
+Brassica,Mustards
+Brodiaea,Harvest Brodiaea
+Buddleja,Butterfly bush
 Cakile,Searockets
-Calendula,Marigolds
+Calendula,Pot marigold
 Calochortus,Mariposa lily
 Camassia,Camases
 Campanula,Bellflowers
@@ -65,10 +66,10 @@ Crepis,Hawksbeard
 Cytisus,Brooms
 Dahlia,Dahlia
 Daphne,Daphne
-Daucus,Carrot
+Daucus,Wild carrot
 Delphinium,Larkspur
 Dianthus,Pink
-Dicentra,Asian bleeding-heart
+Dicentra,Bleeding-heart
 Dichelostemma,Wild hyacinths
 Digitalis,Foxgloves
 Dodecatheon,Shooting star
@@ -77,7 +78,7 @@ Echinacea,Coneflower
 Echinops,Globe thistle
 Elaeagnus,Silverberry
 Epilobium,Willowherbs
-Erica,Heath
+Erica,Heather
 Erigeron,Fleabane
 Eriogonum,Wild buckwheats
 Eriophyllum,Woolly sunflower
@@ -90,12 +91,12 @@ Eschscholzia,Poppy
 Euonymus,Spindle tree
 Foeniculum,Fennel
 Fragaria,Strawberries
-Fritillaria,Yellow fritillary
+Fritillaria,Frillary
 Fuschia,Fuschia
 Gaillardia,Blanket flowers
 Galeopsis,Hemp-nettle
 Galium,Northern bedstraw
-Gaultheria,Shallon
+Gaultheria,Salal
 Geranium,Crane's-bill
 Geum,Avens
 Gilia,Bird's-eyes
@@ -110,7 +111,7 @@ Heterotheca,Hairy goldenaster
 Heuchera,Coral bells
 Hibiscus,Rosemallows
 Hieracium,Hawkweed
-Holodiscus,Ironwood
+Holodiscus,Ocean spray
 Hyacinthoides,Bluebells
 Hydrangea,Hydrangea
 Hypericum,St. John's wort
@@ -139,7 +140,7 @@ Linaria,Toadflaxes
 Linnaea,Twinflower
 Linum,Flaxes
 Lithodora,Purple gromwell
-Lithophragma,Smallflower woodland star
+Lithophragma,Woodland star
 Lithospermum,Lemonweed
 Lobelia,Lobelias
 Lobularia,Sweet alyssum
@@ -150,7 +151,7 @@ Lupinus,Lupine
 Lychnis,Rose campion
 Lythrum,Purple loosestrife
 Madia,Tarweeds
-Mahonia,Barberries
+Mahonia,Oregon grape
 Malus,Apples
 Marah,Oregon manroot
 Medicago,Medics
@@ -185,13 +186,13 @@ Phygelius,Cape fuchsias
 Physocarpus,Ninebark
 Pieris,Andromedas
 Plagiobothrys,Popcorn flowers
-Plantago,Narrow-leaved plantain
+Plantago,Plantain
 Plectritis,Seablush
 Polygonum,Knotweed
 Potentilla,Cinquefoils
 Pratia,White root
 Prunella,Self-heals
-Prunus,Laurel
+Prunus,Cherry
 Pulmonaria,Lungwort
 Purshia,Bitterbrush
 Ranunculus,Buttercups
@@ -231,7 +232,7 @@ Styrax,Snowbell
 Symphoricarpos,Snowberry
 Symphytum,Common comfrey
 Syringa,Lilac
-Tageta,Marigold
+Tageta,French marigold
 Tanacetum,Tansy
 Taraxacum,Dandelion
 Tellima,Fringe cups
@@ -247,4 +248,4 @@ Vinca,Periwinkle
 Viola,Violet
 Weigela,Weigela
 Wisteria,Wisteria
-Zygadenus,Sandbog death camas
+Zygadenus,Death camas

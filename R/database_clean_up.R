@@ -94,11 +94,12 @@ write.csv(plant_bee_table, "data/site_net.csv", row.names = FALSE)
 
 db <- read.csv("data/site_net.csv", stringsAsFactors = FALSE)
 
-regions <- read.csv("data/new_regions.csv")
+regions <- read.csv("data/new_regions.csv", stringsAsFactors = FALSE)
 
 db_lo <- db %>% 
   left_join(regions) %>% 
-  filter(!region == "HEL")
+  filter(!region == "HEL") %>% 
+  mutate(ecosection_nm = ifelse(ecosection_nm == "Southern Okanogan Basin", "Southern Okanagan Basin", ecosection_nm))
 
 write.csv(db_lo, "data/site_net_locs.csv", row.names = FALSE)
 
@@ -125,8 +126,10 @@ plant_traits <- read.csv("raw_data/elle_plants_full/elle_plants_full-Table 1.csv
   mutate(plant_sp = ifelse(plant_sp == "Craetagus douglasii", "Crataegus douglasii", plant_sp)) 
 
 bee_names <- read.csv("raw_data/common_names_pol.csv", stringsAsFactors = FALSE)
+colnames(bee_names) <- c("Genus", "Common.name")
 
 plant_names <- read.csv("raw_data/common_names_plants.csv", stringsAsFactors = FALSE)
+colnames(plant_names) <- c("plant_sp", "common.name")
 
 db_int <- db %>% 
   filter(!(Species == "")) %>% 

@@ -1,3 +1,4 @@
+common_names_pol,
 Genus,Common name
 Adela,Fairy longhorn moth
 Agapostemon,Metallic green sweat bee
@@ -12,11 +13,11 @@ Bombylius,Greater bee flies
 Calliphora,Blow flies
 Calypte,Hummingbirds
 Ceratina,Small carpenter bees
-Cheilosia,Un-coloured hoverfly
+Cheilosia,Hoverfly
 Chrysotoxum,Coloured hoverfly
 Coelioxys,Leafcutter cuckoo bees
 Colletes,Plasterer bees
-Conophorus,Bee flies
+Conophorus,Lesser bee flies
 Cortodera,Longhorn beetle
 Dianthidium,Resin bee
 Dolichovespula,Yellowjackets
@@ -31,7 +32,7 @@ Eumerus,Hoverflies
 Eupeodes,Hoverflies
 Gymnosoma,Tachinid flies
 Habropoda,Mountain-diggers
-Halictus,Furrow bees
+Halictus,Sweat bees
 Helophilus,Large hoverflies
 Heriades,Small black resin bees
 Hoplitis,Hoplitis bees
@@ -44,11 +45,11 @@ Melanostoma,Hoverflies
 Melecta,Digger-cuckoo bees
 Meliscaeva,Hoverflies
 Melissodes,Long-horned bees
-Merodon,Bee–like hoverflies
+Merodon,Bulb fly
 Mischocyttarus,Mischocyttarus wasps
 Neorhynchocephalus,Tangle-veined flies
 Osmia,Mason bees
-Panurginus,Mining bees
+Panurginus,Small mining bees
 Perdita,Fairy bees
 Pieris,Cabbage butterfly
 Platycheirus,Hoverflies
@@ -65,4 +66,4 @@ Thymelicus,Skipper butterfly
 Toxomerus,Hoverflies
 Trichodes,Checkered beetles
 Vespula,Yellowjackets 
-Volucella,Hoverflies
+Volucella,Bumblebee hoverfly
