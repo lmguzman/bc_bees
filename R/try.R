@@ -27,13 +27,19 @@ input$bees <- c("Digger bees")
 sort(unique(db$bee_sp))
 
 
+plant_colours <- c(rep("white", 30), rep("blue", 30), rep("green", 30), rep("yellow", 30), rep("orange", 30), rep("red", 30))
 
+db_cols <- db %>%
+  dplyr::select(plant_common) %>%
+  unique() %>% 
+  cbind(plant_colours)
+
+db <- db %>%
+  full_join(db_cols, by = "plant_common")
 
 
 input$action_type <- "Build Network"
-db %>% 
-  filter(locs == "Cowichan", bee_sp == "Andrena\nvicina")
-
+db 
 
 p <- plot(network, vertex.color=my_color, edge.width=E(network)$importance.Freq, vertex.size = 50)  
 
@@ -157,6 +163,9 @@ bees_crop <- unique(db[db$plant_common == crop_type,'bee_sp'])
 
 fil_db_1 <- db[db$bee_sp %in% bees_crop,]
 
+
+
+
 fil_db <- fil_db_1[fil_db_1$plant_common != crop_type,]
 fil_db_crop <-fil_db_1[fil_db_1$plant_common == crop_type,]
 
@@ -193,26 +202,7 @@ v.mat.act <- dplyr::select(fil_db, plant_sp, bee_sp) %>%
   tibble::column_to_rownames('bee_sp') %>% 
   as.matrix()
 
-withProgress(message = 'Making plot', value = 0, {
-  
-  n.gens = 1000
-  x.in <- initial.popn(N = 100, n.plants = n_plants, n.plants.tot = ncol(v.mat.act),
-                       fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act)
-  out <- vector("numeric", n.gens)
-  for(i in seq_len(n.gens)){
-    x <- ga.step(N = 100, state = x.in, s = 5, p.mutate = 0.01, p.sex = 0.5, p.rec =  0.25, fitness=abundance.phenology.richness, v.mat = v.mat.act, bloom.times = bloom.times.act)
-    out[i] <- x$best.w
-    
-    incProgress(1/n.gens, detail = paste("Doing part", i))
-    
-  }
-  
-})
-
-res <- list(best.w=x$best.w, best.model=x$best.model, best.w.t=out)
-
-pl_sp <-colnames(v.mat.act)[which(res$best.model)] #get list of best plants
-"REMOVE" pl_sp <- colnames(v.mat.act)[c(1,10, 50, 20)]
+pl_sp <- colnames(v.mat.act)[c(1,10, 50, 20)]
 
 fil2_db <- fil_db[fil_db$plant_sp %in% pl_sp,]
 
@@ -225,11 +215,11 @@ pl_sp <- append(pl_sp, "Vaccinium\ncorymbosum")
 fil_bloom_times <- bloom.times.act %>%
   map_df(~data.frame(week = .x), .id = 'plant_sp') %>%
   left_join(fil2_db_wcrop) %>%
-  dplyr::select(plant_sp, week, plant_common) %>%
+  dplyr::select(plant_sp, week, plant_common, plant_colours) %>%
   unique()
 
 fil_bloom_times <- fil_bloom_times %>% 
-  mutate(category = case_when(plant_common == "Blueberry" ~ "Crop",
+  dplyr::mutate(category = case_when(plant_common == "Blueberry" ~ "Crop",
                               plant_common == "Apple" ~ "Crop",
                               plant_common != "Blueberry" ~ "Other"))
 
@@ -244,9 +234,11 @@ if(names_to_use == "Common names"){
     xlab("") + ylab("")
     max_plot <- max_plot + theme(legend.position = "none")
 }else{
-  max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_sp, colour = categorgy), shape = 15, size = 10) +
-    theme_cowplot() + scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar",
-                                                                                              "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+  max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_sp, colour = plant_colours), shape = 15, size = 10) +
+    theme_cowplot() + scale_fill_manual(name = "Plant colour", breaks = c(paste(fil_bloom_times$plant_common, sep = ", ")),
+                                        values = c("white" = "black")) +
+    scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar","Apr", "May", "Jun", 
+                                                                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
                                          sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
     xlab("") + ylab("")
   max_plot <- max_plot + theme(legend.position = "none")
@@ -269,26 +261,13 @@ max_plot
 
 ###############################################################################
 
-unique(db$bee_guild)
-
 db %>%
-  mutate(bee_guild = case_when(bee_common == "Sand wasps" ~ "otherhym",
-                               TRUE ~  as.character(bee_guild))) %>%
-  mutate(bee_guild_otro = case_when(bee_guild == "bombyliidae" ~ "Flower flies", 
-                               bee_guild == "andrenidae" ~ "Mining bees",
-                               bee_guild == "syrphidae" ~ "Flower flies",
-                               bee_guild == "otherfly" ~ "Flies",
-                               bee_common == "Bumble bees" ~ "Bumble bees",
-                               bee_guild == "apidae" & bee_common != "Bumble bees" & bee_common != "Honey bee"~ "Other bees",
-                               bee_common == "Honey bee" ~ "Honey bees",
-                               bee_guild == "megachilidae" ~ "Mason & leafcutter bees",
-                               bee_guild == "halictidae" ~ "Sweat bees",
-                               bee_guild == "colletidae" ~ "Other bees",
-                               bee_guild == "lepidoptera" ~ "Moths & Butterflies",
-                               bee_guild == "coleoptera" ~ "Beetles",
-                               bee_guild == "otherhym" ~ "Wasps",
-                               bee_guild == "aves" ~ "Birds",
-                               TRUE ~ "Uncommon visitors")) %>% View()
+  filter(., region == "FRL") %>%
+  dplyr::select(plant_sp) %>%
+  group_by(plant_sp) %>%
+  count() %>% View()
+
+
   
 
 
