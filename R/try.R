@@ -1,9 +1,12 @@
 input <- NULL
 
+input$region <- 'Fraser Lowland'
 input$region <- "All"
 input$name_type <- "Scientific names"
 input$native <- c("Native")
 input$n_plants <- 10
+input$n_plants_2 <- 10
+
 input$maximizer <- "Pollinator abundance"
 
 #testing
@@ -25,6 +28,8 @@ input$name_type <- "Common names"
 input$bees <- c("Digger bees", "Mining bee", "Mason bees")
 input$bees <- c("Digger bees")
 sort(unique(db$bee_sp))
+
+input$crop <- "Blueberry"
 
 
 plant_colours <- c(rep("white", 30), rep("blue", 30), rep("green", 30), rep("yellow", 30), rep("orange", 30), rep("red", 30))

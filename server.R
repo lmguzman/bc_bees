@@ -454,7 +454,7 @@ shinyServer(function(input, output, session) {
 
     })
 
-    plot_crop <- eventReactive(ignoreNULL = TRUE, ignoreInit = TRUE,
+    plot_crop <- eventReactive(ignoreNULL = TRUE, 
       input$go2,{
         
       crop_type <- input$crop
@@ -482,6 +482,14 @@ shinyServer(function(input, output, session) {
       
       if(!is.null(input$shrub_2)){
         fil_db_1 <- fil_db_1[fil_db_1$plant_life_form %in% input$shrub_2,]
+      }
+      
+      nice_loc <- input$region
+      
+      if(nice_loc == "All"){
+        fil_db_1 <- fil_db_1
+      }else{
+        fil_db_1 <- fil_db_1[fil_db_1$ecosection_nm == nice_loc,]
       }
       
       n_plants_2 <- input$n_plants_2

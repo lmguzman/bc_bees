@@ -258,4 +258,23 @@ saveRDS(all_flying_times, "data/all_flying_times.rds")
 
 saveRDS(all_flowering_times, "data/all_flowering_times.rds")
 
+### For Sarah ## 
 
+db2 <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
+
+db2 %>% 
+  head()
+
+unique_bee <- db2 %>% 
+  select(bee_sp, bee_common) %>% 
+  unique() %>% 
+  arrange(bee_sp)
+
+write.csv(unique_bee, "data/unique_bee.csv", row.names = FALSE)
+
+unique_plant <- db2 %>% 
+  select(plant_sp, plant_common) %>% 
+  unique() %>% 
+  arrange(plant_sp)
+
+write.csv(unique_plant, "data/unique_plant.csv", row.names = FALSE)
