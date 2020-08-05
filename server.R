@@ -24,6 +24,7 @@ library(gridExtra)
 library(htmlwidgets)
 library(forcats)
 source("R/functions.R")
+library(shinyalert)
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
 
@@ -115,6 +116,10 @@ shinyServer(function(input, output, session) {
         }
         
         
+    })
+    observeEvent(input$help, {
+      # Show a modal when the button is pressed
+      shinyalert("Welcome to the BC pollinator app!", "This app allows you to interact with our most up to-date data on plants and pollinators of British Columbia. You can use this app to see which pollinators visit your favourite plant, find what plants maximize your pollinator diversity or find a set of plants that support your crop. If you need more help head to the 'help' tab")
     })
     
     maxi_plants <- eventReactive(input$go,{

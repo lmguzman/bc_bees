@@ -12,6 +12,7 @@ library(purrr)
 library(ggiraph)
 library(gridExtra)
 library(htmlwidgets)
+library(shinyalert)
 
 #reading in map data
 
@@ -21,7 +22,7 @@ nice_locations <- unique(db$ecosection_nm)
 
 # Define UI for application that draws a histogram
 shinyUI(dashboardPage(
-
+    
     # Application title
     dashboardHeader(title= "Pollinators of \nBritish Columbia", titleWidth = 300,
                     tags$li(a(href = 'http://www.sfu.ca',
@@ -33,6 +34,8 @@ shinyUI(dashboardPage(
     # Sidebar with a slider input for number of bins
     dashboardSidebar(width = 450, 
             leafletOutput("plot_region", height = 300),
+            useShinyalert(),  # Set up shinyalert
+            actionButton("help", "Where do I start?"),
             selectInput(inputId = 'region',
                         label = 'Region',
                         choices = c("All", nice_locations)),
@@ -100,6 +103,8 @@ shinyUI(dashboardPage(
                                  p("This app is developed by Laura Melissa Guzman, Tyler Kelly, Leithen M'Gonigle, Lora Morandin and Elizabeth Elle in collaboration with Pollination Partnership and the Native Bee Society of British Columbia"),
                                  h4("Data contributors:"),
                                  p("The data for this app was collected by Dr. Elizabeth Elle"),
+                                 h4("Photo contributors:"),
+                                 p("The photos for this app were collected by Sarah Jonhnson"),
                                  h4("References:"),
                                  p("Genetic algorithm for phenological coverage:"),
                                  p("M'Gonigle, Williams, Lonsdorf, Kremen. (2016) A Tool for Selecting Plants When Restoring Habitat for Pollinators. Conservation Letters. 10(1): 105-111"),
@@ -107,7 +112,7 @@ shinyUI(dashboardPage(
                                  p("Laura Melissa Guzman"),
                                  p("E-mail: laura_melissa_guzman@sfu.ca"),
                                  h4("Acknowledgements:"),
-                                 p("We want to thank Sarah Jonhnson, Elijah Rejes and Matthew Pennell for feedback."))
+                                 p("We want to thank Sarah Jonhnson, Elijah Rejes, Claire Kremen, Carly McGregor, Matthew Pennell and the Native Bee Society of BC for feedback."))
             )
         
          )
