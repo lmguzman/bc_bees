@@ -96,8 +96,12 @@ shinyUI(dashboardPage(
         dashboardBody(
             
             tabsetPanel(type = "tabs",
-                        tabPanel("Plot", girafeOutput("plot1")),
+                        tabPanel("Plot", fluidRow(girafeOutput("plot1")),
+                                 fluidRow(h4("Download report"))),
                         #tabPanel("Summary", verbatimTextOutput("summary")),
+                        tabPanel("Help", 
+                                 h4("Region"),
+                                 h4("Scientific name")),
                         tabPanel("Contributors", 
                                  h4("Developers:"),
                                  p("This app is developed by Laura Melissa Guzman, Tyler Kelly, Leithen M'Gonigle, Lora Morandin and Elizabeth Elle in collaboration with Pollination Partnership and the Native Bee Society of British Columbia"),
@@ -113,6 +117,7 @@ shinyUI(dashboardPage(
                                  p("E-mail: laura_melissa_guzman@sfu.ca"),
                                  h4("Acknowledgements:"),
                                  p("We want to thank Sarah Jonhnson, Elijah Rejes, Claire Kremen, Carly McGregor, Matthew Pennell and the Native Bee Society of BC for feedback."))
+                       
             )
         
          )

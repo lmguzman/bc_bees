@@ -119,7 +119,7 @@ shinyServer(function(input, output, session) {
     })
     observeEvent(input$help, {
       # Show a modal when the button is pressed
-      shinyalert("Welcome to the BC pollinator app!", "This app allows you to interact with our most up to-date data on plants and pollinators of British Columbia. You can use this app to see which pollinators visit your favourite plant, find what plants maximize your pollinator diversity or find a set of plants that support your crop. If you need more help head to the 'help' tab")
+      shinyalert(closeOnEsc = TRUE, closeOnClickOutside = TRUE, "Welcome to the BC pollinator app!", "This app allows you to interact with our most up to-date data on plants and pollinators of British Columbia. You can use this app to see which pollinators visit your favourite plant, find what plants maximize your pollinator diversity or find a set of plants that support your crop. If you need more help head to the 'help' tab")
     })
     
     maxi_plants <- eventReactive(input$go,{
@@ -656,50 +656,6 @@ shinyServer(function(input, output, session) {
         }
         })
     
-    sp_name_plot <- eventReactive(input$plot_click$x,{
-
-        if(input$action_type == "Build Network"){
-            ggp <-plot_gg()
-            p_x <- input$plot_click$x
-            p_y <- input$plot_click$y
-            min_x <- min(all_dist <- Rfast::dista(matrix(c(x = p_x, y = p_y), nrow =1), as.matrix(ggp$data[,c("x", "y")])))
-            sp_name <- ggp$data[which(all_dist == min(all_dist)),"label"]
-
-            sp_name
-        }else{
-            NULL
-        }
-
-    })
-
-    output$info <- renderText({
-
-      if(input$action_type == "Build Network"){
-        if (is.null(input$plot_click$x)){
-          "Click on any species to see information about it."
-        }else{
-          sp_name <- sp_name_plot()
-          sp_name2 <- str_replace(sp_name, "\n", " ")
-          paste("selected species=",sp_name2, "\n")
-        }
-      }
-
-    })
-    output$mySite <- renderUI({
-
-      if(input$action_type == "Build Network"){
-        if (is.null(input$plot_click$x)){
-            " "
-        }else{
-            sp_name <- sp_name_plot()
-            sp_name3 <- str_replace(sp_name, "\n", "_")
-            sp_name2 <- str_replace(sp_name, "\n", " ")
-            website <- paste0("https://en.wikipedia.org/wiki/", sp_name3)
-            url <- a(sp_name2, href=website)
-            tagList("Wikipedia link:", url)
-        }
-      }
-    })
 
     
 })
