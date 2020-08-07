@@ -1,0 +1,80 @@
+---
+title: "Report for BC pollinator app"
+output: html_document
+params:
+  plot_rep: NA
+  chosen_things: NA
+---
+
+```{r include = FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## Selected Options
+
+
+|**Region** |**Type of name**|**What do you want to do?**|
+|---|---|---|
+|`r params$chosen_things$region`|`r params$chosen_things$name_type`|`r params$chosen_things$action_type`|
+
+
+
+```{r}
+if(params$chosen_things$action_type == "Build Network"){
+  
+  if(params$chosen_things$net_type == 'Plant'){
+     sp <- params$chosen_things$plants
+  }else if(params$chosen_things$net_type == 'Pollinator'){
+    sp <- params$chosen_things$bees
+  }
+  
+  sp <- paste(str_replace(sp, "\n", " "), collapse = ", ")
+   second_options <- data.frame(type_net = params$chosen_things$net_type, species = sp)
+   colnames(second_options) <- c("Type of Network", "Species chosen")
+}else if(params$chosen_things$action_type == "Get plants"){
+  if(is.null(params$chosen_things$native)){
+    native <- "None selected"
+  }else{
+    native <- params$chosen_things$native
+  }
+  if(is.null(params$chosen_things$shrub)){
+    shrub <- "None selected"
+  }else{
+    shrub <-params$chosen_things$shrub
+  }
+  second_options <- data.frame(maximizer = params$chosen_things$maximizer, native_p = native, plant_type = shrub, n_plant = params$chosen_things$n_plants)
+  colnames(second_options) <- c("How do we select plants?", "Native plants", "Type of plants", "Number of plants")
+}else if(params$chosen_things$action_type == "Support crop"){
+  if(is.null(params$chosen_things$native_2)){
+    native_2 <- "None selected"
+  }else{
+    native_2 <- params$chosen_things$native_2
+  }
+  if(is.null(params$chosen_things$shrub_2)){
+    shrub_2 <- "None selected"
+  }else{
+    shrub_2 <-params$chosen_things$shrub_2
+  }
+  second_options <- data.frame(crop = params$chosen_things$crop, native_p = native_2, plant_type = shrub_2, n_plant = params$chosen_things$n_plants_2, overlap = params$chosen_things$overlap_2)
+  colnames(second_options) <- c("What crop do you want to support?", "Native plants", "Type of plants", "Number of plants", "Should plants overlap with crop?")
+}
+knitr::kable(second_options)
+```
+
+
+
+## Figure
+
+
+```{r fig.width = 6, }
+params$plot_rep
+```
+
+
+
+## Summary
+
+
+
+Thank you for using our app!

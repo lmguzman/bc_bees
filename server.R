@@ -25,6 +25,7 @@ library(htmlwidgets)
 library(forcats)
 source("R/functions.R")
 library(shinyalert)
+source("utils.R")
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
 
@@ -223,6 +224,7 @@ shinyServer(function(input, output, session) {
     
         
         if(input$maximizer == "Phenological coverage"){
+          save(fil_bloom_times, "temp_output.rds")
           if(names_to_use == "Common names"){
             max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_common), shape = 15, size = 10, colour = "#FCBA04") +
               theme_cowplot() + scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar",
@@ -237,8 +239,7 @@ shinyServer(function(input, output, session) {
               xlab("") + ylab("")
           }
         }else{
-          #fil2_db
-          
+          save(fil2_db, "temp_output.rds")
           max_plot <- ggplot(fil2_db) + geom_bar(aes(x = plant_sp, fill = bee_guild_otro)) + coord_flip() +
             theme_cowplot() + scale_fill_manual(name = "Type of \n pollinator", breaks = c("Honey bees", "Bumble bees", "Mason & Leafcutter bees", "Mining bees", "Sweat bees", "Other bees", 
                                                            "Flower flies", "Flies", "Wasps", "Beetles", "Moths & Butterflies", "Birds"), 
@@ -404,7 +405,6 @@ shinyServer(function(input, output, session) {
           set.edge.attribute(net, "eColor", ifelse(net %e% "weights" > 80, "#525252", 
                                                    ifelse(net %e% "weights" < 3, "#d9d9d9", 
                                                           ifelse(net %e% "weights" > 30, "#737373", "#969696"))))
-          
           ggdata <-ggnet2(net,
                           label = FALSE,
                           mode = "kamadakawai",
@@ -599,7 +599,6 @@ shinyServer(function(input, output, session) {
         
         names_to_use <- input$name_type
         
-        
         if(names_to_use == "Common names"){
           
           max_plot <- ggplot(fil_bloom_times) + 
@@ -643,19 +642,45 @@ shinyServer(function(input, output, session) {
         max_plot
     })
     
+    plot_function <- function(act_type){
+      if(act_type == "Build Network"){
+        
+        plot_gg()
+        
+      }else if(act_type == "Get plants"){
+        maxi_plants()
+      }else if(act_type == "Support crop"){
+        plot_crop()
+      }
+    }
     # Make the plot
     output$plot1 <- renderGirafe({
-        if(input$action_type == "Build Network"){
-          
-          plot_gg()
-          
-        }else if(input$action_type == "Get plants"){
-          maxi_plants()
-        }else if(input$action_type == "Support crop"){
-          plot_crop()
-        }
+      plot_function(act_type = input$action_type)
         })
     
-
+    ### make downloadable report
+    
+    output$report <- downloadHandler(
+      # For PDF output, change this to "report.pdf"
+      filename = "report.html",
+      content = function(file) {
+        # Copy the report file to a temporary directory before processing it, in
+        # case we don't have write permissions to the current working dir (which
+        # can happen when deployed).
+        tempReport <- file.path(tempdir(), "report.Rmd")
+        file.copy("report.Rmd", tempReport, overwrite = TRUE)
+        
+        # Set up parameters to pass to Rmd document
+        
+        params <- list(plot_rep = plot_function(act_type = input$action_type),
+                       chosen_things = input)
+        # Knit the document, passing in the `params` list, and eval it in a
+        # child of the global environment (this isolates the code in the document
+        # from the code in this app).
+        rmarkdown::render(tempReport, output_file = file,
+                          params = params,
+                          envir = new.env(parent = globalenv())
+        )
+    })
     
 })

@@ -6,7 +6,7 @@ input$name_type <- "Scientific names"
 input$native <- c("Native")
 input$n_plants <- 10
 input$n_plants_2 <- 10
-
+input$action_type <- "Get plants"
 input$maximizer <- "Pollinator abundance"
 
 #testing
