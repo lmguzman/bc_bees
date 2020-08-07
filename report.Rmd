@@ -72,20 +72,30 @@ params$plot_rep
 ```
 
 
-
 ## Summary
 
-```{r }
+```{r message=FALSE}
 output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees/tmp"
 file_name <- "temp_output.rds"
 
 temp_data <- readRDS(file.path(output_dir, file_name))
 
 if(params$chosen_things$action_type == "Build Network"){
-  output_table <- data.frame(temp_data) %>% 
-    dplyr::select(-`X.`) %>% 
-    tibble::rownames_to_column(var = 'Plant.species') %>% 
-    dplyr::mutate(Plant.species = str_replace(Plant.species, "\n", " "))
+  if(params$chosen_things$net_type == "Pollinator" & length(params$chosen_things$bees) == 1){
+    output_table <- data.frame(temp_data) %>% 
+      dplyr::select(-`X.`) %>% 
+      tibble::rownames_to_column(var = 'Plant.species') %>% 
+      dplyr::mutate(Plant.species = str_replace(Plant.species, "\n", " "))
+  }else if(params$chosen_things$net_type == "Plant" & length(params$chosen_things$plants) == 1){
+    output_table <- data.frame(temp_data) %>% 
+      tibble::rownames_to_column(var = 'Plant.species') %>% 
+      dplyr::mutate(Plant.species = str_replace(Plant.species, "\n", " ")) %>% 
+      slice(1)
+  }else{
+    output_table <- data.frame(temp_data) %>% 
+      tibble::rownames_to_column(var = 'Plant.species') %>% 
+      dplyr::mutate(Plant.species = str_replace(Plant.species, "\n", " "))
+  }
   colnames(output_table) <- str_replace(colnames(output_table), "\\.", " ")
 }else if(params$chosen_things$action_type == "Get plants" & (params$chosen_things$maximizer == "Pollinator abundance" | params$chosen_things$maximizer == "Pollinator diversity")){
   plant_trait <- temp_data %>% 
@@ -110,7 +120,7 @@ if(params$chosen_things$action_type == "Build Network"){
    colnames(output_table)[1:2] <- c("Plant species", "Plant common name")
   }
 
-kable(output_table)
+knitr::kable(output_table)
 ```
 
 Thank you for using our app!
