@@ -56,6 +56,9 @@ eco_map <- leaflet(data = ecosec_map)
 
 pal <- c("#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17", "#004F2D")
 
+output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees/tmp"
+file_name <- "temp_output.rds"
+
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
   output$plot_region <- renderLeaflet({
@@ -224,7 +227,8 @@ shinyServer(function(input, output, session) {
     
         
         if(input$maximizer == "Phenological coverage"){
-          save(fil_bloom_times, "temp_output.rds")
+          saveRDS(fil_bloom_times, file = file.path(output_dir, file_name))
+          
           if(names_to_use == "Common names"){
             max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_common), shape = 15, size = 10, colour = "#FCBA04") +
               theme_cowplot() + scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar",
@@ -239,7 +243,7 @@ shinyServer(function(input, output, session) {
               xlab("") + ylab("")
           }
         }else{
-          save(fil2_db, "temp_output.rds")
+          saveRDS(fil2_db, file = file.path(output_dir, file_name))
           max_plot <- ggplot(fil2_db) + geom_bar(aes(x = plant_sp, fill = bee_guild_otro)) + coord_flip() +
             theme_cowplot() + scale_fill_manual(name = "Type of \n pollinator", breaks = c("Honey bees", "Bumble bees", "Mason & Leafcutter bees", "Mining bees", "Sweat bees", "Other bees", 
                                                            "Flower flies", "Flies", "Wasps", "Beetles", "Moths & Butterflies", "Birds"), 
@@ -323,6 +327,8 @@ shinyServer(function(input, output, session) {
               spread(key = bee_sp, value = Freq) %>% 
               tibble::column_to_rownames("plant_sp")  
           }
+          
+          saveRDS(bip_table, file = file.path(output_dir, file_name))
           
           net <- bip_table %>% 
             network(matrix.type = "bipartite", 
@@ -598,6 +604,8 @@ shinyServer(function(input, output, session) {
                                       plant_common != "Blueberry" ~ "Other"))
         
         names_to_use <- input$name_type
+        
+        saveRDS(fil_bloom_times, file = file.path(output_dir, file_name))
         
         if(names_to_use == "Common names"){
           

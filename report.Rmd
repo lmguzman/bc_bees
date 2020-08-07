@@ -67,7 +67,7 @@ knitr::kable(second_options)
 ## Figure
 
 
-```{r fig.width = 6, }
+```{r fig.width = 6}
 params$plot_rep
 ```
 
@@ -75,6 +75,21 @@ params$plot_rep
 
 ## Summary
 
+```{r }
+output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees/tmp"
+file_name <- "temp_output.rds"
 
+temp_data <- readRDS(file.path(output_dir, file_name))
+
+if(params$chosen_things$action_type == "Build Network"){
+  output_table <- data.frame(temp_data) %>% 
+    dplyr::select(-`X.`) %>% 
+    tibble::rownames_to_column(var = 'Plant.species') %>% 
+    mutate(plant_sp = str_replace(plant_sp, "\n", " "))
+  
+}
+
+
+```
 
 Thank you for using our app!
