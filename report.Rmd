@@ -85,11 +85,32 @@ if(params$chosen_things$action_type == "Build Network"){
   output_table <- data.frame(temp_data) %>% 
     dplyr::select(-`X.`) %>% 
     tibble::rownames_to_column(var = 'Plant.species') %>% 
-    mutate(plant_sp = str_replace(plant_sp, "\n", " "))
+    dplyr::mutate(Plant.species = str_replace(Plant.species, "\n", " "))
+  colnames(output_table) <- str_replace(colnames(output_table), "\\.", " ")
+}else if(params$chosen_things$action_type == "Get plants" & (params$chosen_things$maximizer == "Pollinator abundance" | params$chosen_things$maximizer == "Pollinator diversity")){
+  plant_trait <- temp_data %>% 
+    dplyr::select(plant_sp, plant_native, plant_life_form) %>% unique() %>% 
+    dplyr::mutate(plant_sp = str_replace(plant_sp, "\n", " "))
   
-}
+  output_table <- temp_data %>% 
+    dplyr::select(plant_sp, bee_guild_otro) %>% 
+    dplyr::mutate(plant_sp = str_replace(plant_sp, "\n", " ")) %>% 
+    group_by(plant_sp, bee_guild_otro) %>% 
+    summarise(n_obs = n()) %>% 
+    left_join(plant_trait)
 
+  colnames(output_table)  <- c("Plant species", "Pollinator guild", "Number of observations", "Plant native", "Plant life form")
+}else if((params$chosen_things$action_type == "Get plants" & params$chosen_things$maximizer == "Phenological coverage") | params$chosen_things$action_type == "Support crop"){
+  
+    output_table <- temp_data %>% 
+      dplyr::mutate(plant_sp = str_replace(plant_sp, "\n", " ")) %>% 
+      dplyr::mutate(week = paste("Week", week)) %>% 
+      dplyr::mutate(active = 'yes') %>% 
+      pivot_wider(names_from = week, values_from = active, values_fill = list(active = 'no')) 
+   colnames(output_table)[1:2] <- c("Plant species", "Plant common name")
+  }
 
+kable(output_table)
 ```
 
 Thank you for using our app!
