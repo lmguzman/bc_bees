@@ -13,7 +13,8 @@ library(ggiraph)
 library(gridExtra)
 library(htmlwidgets)
 library(shinyalert)
-
+library(shinyforms)
+source("utils.R")
 #reading in map data
 
 db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
@@ -98,10 +99,18 @@ shinyUI(dashboardPage(
             tabsetPanel(type = "tabs",
                         tabPanel("Plot", fluidRow(girafeOutput("plot1")),
                                  fluidRow(downloadButton("report", "Generate report"))),
-                        #tabPanel("Summary", verbatimTextOutput("summary")),
                         tabPanel("Help", 
                                  h4("Region"),
                                  h4("Scientific name")),
+                        tabPanel("Feedback", 
+                                 fluidRow(h4("This app is a work in progress"),
+                                          p("Here are some of the features we want to implement in the future:"),
+                                          p("- Add more images of both the plants and pollinators"),
+                                          p("- Expand the geographic range to include Western North America"),
+                                          p("- Include citizen science data"),
+                                          p(""),
+                                          h4("If you have any feedback for us or would like to contribute data, please fill the following form")),
+                                 fluidRow(formUI(formInfo))),
                         tabPanel("Contributors", 
                                  h4("Developers:"),
                                  p("This app is developed by Laura Melissa Guzman, Tyler Kelly, Melissa Platsko, Leithen M'Gonigle, Lora Morandin and Elizabeth Elle in collaboration with Pollination Partnership and the Native Bee Society of British Columbia"),

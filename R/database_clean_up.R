@@ -99,7 +99,7 @@ regions <- read.csv("data/new_regions.csv", stringsAsFactors = FALSE)
 db_lo <- db %>% 
   left_join(regions) %>% 
   filter(!region == "HEL") %>% 
-  mutate(ecosection_nm = ifelse(ecosection_nm == "Southern Okanogan Basin", "Southern Okanagan Basin", ecosection_nm))
+  dplyr::mutate(ecosection_nm = ifelse(ecosection_nm == "Southern Okanogan Basin", "Southern Okanagan Basin", ecosection_nm))
 
 write.csv(db_lo, "data/site_net_locs.csv", row.names = FALSE)
 
@@ -266,14 +266,14 @@ db2 %>%
   head()
 
 unique_bee <- db2 %>% 
-  select(bee_sp, bee_common) %>% 
+  dplyr::select(bee_sp, bee_common) %>% 
   unique() %>% 
   arrange(bee_sp)
 
 write.csv(unique_bee, "data/unique_bee.csv", row.names = FALSE)
 
 unique_plant <- db2 %>% 
-  select(plant_sp, plant_common) %>% 
+  dplyr::select(plant_sp, plant_common) %>% 
   unique() %>% 
   arrange(plant_sp)
 

@@ -177,7 +177,7 @@ shinyServer(function(input, output, session) {
           
           v.mat.act <- dplyr::select(fil_db, plant_sp, bee_sp) %>% 
             unique() %>% dplyr::mutate(int = 1) %>% 
-            spread(key = 'plant_sp', value = int, fill = 0) %>% 
+            pivot_wider(names_from = 'plant_sp', values_from = 'int', values_fill = list(int = 0)) %>% 
             tibble::column_to_rownames('bee_sp') %>% 
             as.matrix()
           
@@ -311,12 +311,12 @@ shinyServer(function(input, output, session) {
             
             if(type_net == "Pollinator"){
               bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
-                spread(key = bee_sp, value = Freq) %>% 
+                pivot_wider(names_from = 'bee_sp', values_from = 'Freq') %>% 
                 dplyr::mutate(` ` = 0) %>% 
                 tibble::column_to_rownames("plant_sp")
             }else{
               bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
-                spread(key = bee_sp, value = Freq) %>% 
+                pivot_wider(names_from = 'bee_sp', values_from = 'Freq') %>% 
                 tibble::column_to_rownames("plant_sp")
               bip_table[2,] <- 0
               rownames(bip_table)[2] <- ""
@@ -324,7 +324,7 @@ shinyServer(function(input, output, session) {
             
           }else{
             bip_table <- data.frame(table(fil2_db[,c("bee_sp", "plant_sp")])) %>% 
-              spread(key = bee_sp, value = Freq) %>% 
+              pivot_wider(names_from = 'bee_sp', values_from = 'Freq') %>% 
               tibble::column_to_rownames("plant_sp")  
           }
           
@@ -519,7 +519,7 @@ shinyServer(function(input, output, session) {
         
         v.mat.act <- dplyr::select(fil_db, plant_sp, bee_sp) %>% 
           unique() %>% dplyr::mutate(int = 1) %>% 
-          spread(key = 'plant_sp', value = int, fill = 0) %>% 
+          pivot_wider(names_from = 'plant_sp', values_from = 'int', values_fill = list(int = 0)) %>% 
           tibble::column_to_rownames('bee_sp') %>% 
           as.matrix()
         
@@ -556,7 +556,7 @@ shinyServer(function(input, output, session) {
         
         v.mat.act <- dplyr::select(fil_db, plant_sp, bee_sp) %>% 
           unique() %>% dplyr::mutate(int = 1) %>% 
-          spread(key = 'plant_sp', value = int, fill = 0) %>% 
+          pivot_wider(names_from = 'plant_sp', values_from = 'int', values_fill = list(int = 0)) %>% 
           tibble::column_to_rownames('bee_sp') %>% 
           as.matrix()
         
@@ -690,5 +690,6 @@ shinyServer(function(input, output, session) {
                           envir = new.env(parent = globalenv())
         )
     })
+    formServer(formInfo)
     
 })
