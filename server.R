@@ -60,8 +60,8 @@ eco_map <- leaflet(data = ecosec_map)
 pal <- c("#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17", "#004F2D")
 
 ## setting output directory for rds file for report
-#output_dir <- "/home/lmguzman/ShinyApps/bc_bees/tmp"
-output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees"
+output_dir <- "/home/lmguzman/ShinyApps/bc_bees/tmp"
+#output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees"
 file_name <- "temp_output.rds"
 
 
