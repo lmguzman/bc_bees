@@ -59,13 +59,13 @@ shinyUI(dashboardPage(
                              
                              # conditional pannel for type of network once build network is selected
                              
-                             conditionalPanel('input.net_type == "Pollinator"', 
+                             conditionalPanel('input.net_type == "Which pollinators do you want to include?"', 
                                               selectInput(inputId = 'bees',
                                                           label = 'Pollinator species',
                                                           choices = c("bee1", 'bee2'), 
                                                           multiple = TRUE)
                              ),
-                             conditionalPanel('input.net_type == "Plant"', 
+                             conditionalPanel('input.net_type == "Which plants do you want to include?"', 
                                               selectInput(inputId = 'plants',
                                                           label = 'Plant species',
                                                           choices = c("plant1", 'plant2'), 
@@ -75,25 +75,25 @@ shinyUI(dashboardPage(
             
             conditionalPanel('input.action_type == "Get plants"',
                              selectInput(inputId = 'maximizer',
-                                         label = 'Maximize:',
+                                         label = 'What feature do you want to maximize?',
                                          choices = c("Pollinator abundance", 'Pollinator diversity', 'Phenological coverage')),
                              checkboxGroupInput(inputId = "native",
-                                                label = 'Use native plants only?',
+                                                label = 'Do you want to use native plants only?',
                                                 choices = c("Native", "Non-Native")),
                              checkboxGroupInput(inputId = "shrub",
                                                 label = 'Which types of plants do you want to use?',
                                                 choices = c("Herb","Shrub","Vine","Tree","Various")),
-                             numericInput("n_plants", "Number of plants:", 10, min = 2, max = 100),
-                             actionButton("go", "Go")),
+                             numericInput("n_plants", "How many plants do you want to choose?", 10, min = 2, max = 100),
+                             actionButton("go", "Go!")),
             
             # conditional panel for selecting suppoting crop 
             
             conditionalPanel('input.action_type == "Support crop"',
                              selectInput(inputId = 'crop',
-                                         label = 'Crop:',
+                                         label = 'Which crop do you want to support?',
                                          choices = c("Blueberry", 'Cranberry', 'Apple')),
                              checkboxGroupInput(inputId = "native_2",
-                                                label = 'Use native plants only?',
+                                                label = 'Do you want to use native plants only?',
                                                 choices = c("Native", "Non-Native")),
                              checkboxGroupInput(inputId = "shrub_2",
                                                 label = 'Which types of plants do you want to use?',
@@ -101,8 +101,8 @@ shinyUI(dashboardPage(
                              selectInput(inputId = "overlap_2",
                                                 label = 'Should plants overlap with crop?',
                                                 choices = c("Yes", "No")),
-                             numericInput("n_plants_2", "Number of plants:", 10, min = 4, max = 100),
-                             actionButton("go2", "Go"))
+                             numericInput("n_plants_2", "How many plants do you want to choose?", 10, min = 4, max = 100),
+                             actionButton("go2", "Go!"))
         ),
 
         # Show a plot of the generated distribution
