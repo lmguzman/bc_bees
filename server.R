@@ -111,7 +111,7 @@ shinyServer(function(input, output, session) {
                 avail_bees <- character(0)
             
             updateSelectInput(session, "bees",
-                              label = "Pollinator species",
+                              label = "Which pollinators do you want to include?",
                               choices = avail_bees,
                               selected = NULL
             )
@@ -125,7 +125,7 @@ shinyServer(function(input, output, session) {
                 avail_plants <- character(0)
             
             updateSelectInput(session, "plants",
-                              label = "Plant species",
+                              label = "Which plants do you want to include?",
                               choices = avail_plants,
                               selected = NULL)
             

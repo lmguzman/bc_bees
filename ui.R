@@ -67,7 +67,7 @@ shinyUI(dashboardPage(
                              ),
                              conditionalPanel('input.net_type == "Plant"', 
                                               selectInput(inputId = 'plants',
-                                                          label = 'Which plants do you want to include?',
+                                                          label = 'Which plants do you want to include?s',
                                                           choices = c("plant1", 'plant2'), 
                                                           multiple = TRUE)
                              )),
