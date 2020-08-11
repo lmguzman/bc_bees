@@ -54,20 +54,20 @@ shinyUI(dashboardPage(
                         choices = c("", "Build Network", "Get plants", "Support crop")),
             conditionalPanel('input.action_type == "Build Network"',
                              selectInput(inputId = 'net_type',
-                                         label = 'Type of Network',
+                                         label = 'What type of network do you want to build?',
                                          choices = c("Pollinator", "Plant")),
                              
                              # conditional pannel for type of network once build network is selected
                              
-                             conditionalPanel('input.net_type == "Which pollinators do you want to include?"', 
+                             conditionalPanel('input.net_type == "Pollinator"', 
                                               selectInput(inputId = 'bees',
-                                                          label = 'Pollinator species',
+                                                          label = 'Which pollinators do you want to include?',
                                                           choices = c("bee1", 'bee2'), 
                                                           multiple = TRUE)
                              ),
-                             conditionalPanel('input.net_type == "Which plants do you want to include?"', 
+                             conditionalPanel('input.net_type == "Plant"', 
                                               selectInput(inputId = 'plants',
-                                                          label = 'Plant species',
+                                                          label = 'Which plants do you want to include?',
                                                           choices = c("plant1", 'plant2'), 
                                                           multiple = TRUE)
                              )),
