@@ -9,7 +9,7 @@ library(network)
 library(tidyr)
 library(readr)
 library(readxl)
-library(rgdal) # needed
+library(rgdal) 
 library(leaflet)
 library(sp)
 library(ggplot2)
@@ -19,7 +19,7 @@ library(tibble)
 library(purrr)
 library(sna)
 library(Hmisc)
-library(ggiraph) # needed
+library(ggiraph) 
 library(gridExtra)
 library(htmlwidgets)
 library(forcats)
@@ -60,7 +60,8 @@ eco_map <- leaflet(data = ecosec_map)
 pal <- c("#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17", "#004F2D")
 
 ## setting output directory for rds file for report
-output_dir <- "/home/lmguzman/ShinyApps/bc_bees/tmp"
+#output_dir <- "/home/lmguzman/ShinyApps/bc_bees/tmp"
+output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees"
 file_name <- "temp_output.rds"
 
 
@@ -182,7 +183,9 @@ shinyServer(function(input, output, session) {
             tb <- table(fil_db$plant_sp, fil_db$bee_sp)
             tb[tb > 0] <- 1
             
-            pl_sp <- names(sort(rowSums(tb), decreasing = TRUE)[1:n_plants])
+            pol_div <- sort(rowSums(tb), decreasing = TRUE)[1:n_plants]
+            
+            pl_sp <- names(pol_div)
             
         }else if(input$maximizer == "Phenological coverage"){
           
@@ -257,7 +260,7 @@ shinyServer(function(input, output, session) {
                                                    sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
               xlab("") + ylab("")
           }
-        }else{
+        }else if(input$maximizer == "Pollinator abundance"){
           saveRDS(fil2_db, file = file.path(output_dir, file_name))
           max_plot <- ggplot(fil2_db) + geom_bar(aes(x = plant_sp, fill = bee_guild_otro)) + coord_flip() +
             theme_cowplot() + scale_fill_manual(name = "Type of \n pollinator", breaks = c("Honey bees", "Bumble bees", "Mason & Leafcutter bees", "Mining bees", "Sweat bees", "Other bees", 
@@ -266,6 +269,19 @@ shinyServer(function(input, output, session) {
                                                          "#c7e9c0", "#a1d99b", "#41ab5d", "#238b45", "#006d2c", "#00441b")) +
             #scale_fill_viridis_d(name = "Type of \n pollinator") +
             xlab("") + ylab("Number of recorded observations") + scale_x_discrete(limits = plant_order$plant_sp)
+        }else if(input$maximizer == "Pollinator diversity"){
+          
+          fil3_db <- distinct(fil2_db[,c("plant_sp", "bee_sp", "bee_guild_otro")])
+          
+          saveRDS(fil3_db, file = file.path(output_dir, file_name))
+          
+          max_plot <- ggplot(fil3_db) + geom_bar(aes(x = plant_sp, fill = bee_guild_otro)) + coord_flip() +
+            theme_cowplot() + scale_fill_manual(name = "Type of \n pollinator", breaks = c("Honey bees", "Bumble bees", "Mason & Leafcutter bees", "Mining bees", "Sweat bees", "Other bees", 
+                                                                                           "Flower flies", "Flies", "Wasps", "Beetles", "Moths & Butterflies", "Birds"), 
+                                                values=c("#08306b", "#08519c", "#2171b5", "#6baed6", "#9ecae1", "#deebf7", 
+                                                         "#c7e9c0", "#a1d99b", "#41ab5d", "#238b45", "#006d2c", "#00441b")) +
+            #scale_fill_viridis_d(name = "Type of \n pollinator") +
+            xlab("") + ylab("Pollinator diversity") + scale_x_discrete(limits = plant_order$plant_sp)
         }
          
         max_plot <- max_plot +

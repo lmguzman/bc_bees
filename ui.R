@@ -2,7 +2,7 @@
 
 library(shiny)
 library(shinydashboard)
-library(rgdal) # not installed 
+library(rgdal) 
 library(leaflet)
 library(sp)
 library(ggplot2)
@@ -10,7 +10,7 @@ library(ggmap)
 library(cowplot)
 library(dplyr)
 library(purrr)
-library(ggiraph) #not installed 
+library(ggiraph) 
 library(gridExtra)
 library(htmlwidgets)
 library(shinyalert)
@@ -44,10 +44,10 @@ shinyUI(dashboardPage(
             useShinyalert(),  # Set up shinyalert
             actionButton("help", "Where do I start?"),
             selectInput(inputId = 'region',
-                        label = 'Region',
+                        label = 'Which region(s) are you interested in?',
                         choices = c("All", nice_locations)),
             selectInput(inputId = "name_type",
-                        label = "Do you want to use:",
+                        label = "How do you want to see species names?",
                         choices = c("Scientific names", "Common names")),
             selectInput(inputId = 'action_type',
                         label = 'What do you want to do?',
@@ -119,11 +119,11 @@ shinyUI(dashboardPage(
                         
                         # Tab for help 
                         tabPanel("Help", 
-                                 h3("Region"),
+                                 h3("Which region(s) are you interested in?"),
                                  p("The map shows the regions where we currently have data from, and the names of the regions. You can select the region on the dropdown menu called 'Region'"),
-                                 h3("Do you want to use:"),
+                                 h3("How do you want to see species names?"),
                                  p("You can choose whether you want to see the plots and data reported using common names or scientific names. Common names will often aggregate multiple species into the same genus"),
-                                 h3("What do you want to do:"),
+                                 h3("What do you want to do?"),
                                  p("We currently have three main functionalities to the app:"),
                                  h4("Build Network"),
                                  p("You can choose individual plants or individual pollinators and see which species interact with that pollinator or plant. This option is useful if you want to see which plants do bumble bees interact with? or how can I support Bombus occidentalis?"),
@@ -135,29 +135,29 @@ shinyUI(dashboardPage(
                         # tab for feedback 
                         
                         tabPanel("Feedback", 
-                                 fluidRow(h4("This app is a work in progress"),
-                                          p("Here are some of the features we want to implement in the future:"),
-                                          p("* Add more images of both the plants and pollinators"),
-                                          p("* Expand the geographic range to include Western North America"),
-                                          p("* Include citizen science data and other sources of data"),
-                                          p(""),
-                                          h4("If you have any feedback for us or would like to contribute data, please fill the following form")),
-                                 fluidRow(formUI(formInfo))),
+                                 h4("This app is a work in progress"),
+                                  p("Here are some of the features we want to implement in the future:"),
+                                  p("* Add more images of both the plants and pollinators"),
+                                  p("* Expand the geographic range to include Western North America"),
+                                  p("* Include citizen science data and other sources of data"),
+                                  p(""),
+                                   h4("If you have any feedback for us or would like to contribute data, please fill the following form"),
+                                 formUI(formInfo)),
                         
                         ## tab for contributors 
-                        tabPanel("Contributors", 
-                                 h4("Developers:"),
-                                 p("This app is developed by Laura Melissa Guzman, Tyler Kelly, Melissa Platsko, Leithen M'Gonigle, Lora Morandin and Elizabeth Elle in collaboration with Pollination Partnership and the Native Bee Society of British Columbia"),
-                                 h4("Data contributors:"),
-                                 p("The data for this app was collected by Dr. Elizabeth Elle"),
-                                 h4("Photo contributors:"),
-                                 p("The photos for this app were collected by Sarah Jonhnson"),
-                                 h4("References:"),
-                                 p("Genetic algorithm for phenological coverage:"),
-                                 p("M'Gonigle, Williams, Lonsdorf, Kremen. (2016) A Tool for Selecting Plants When Restoring Habitat for Pollinators. Conservation Letters. 10(1): 105-111"),
-                                 h4("Correspondence:"),
+                        tabPanel("Contributors and contact", 
+                                 h4("Contact:"),
                                  p("Laura Melissa Guzman"),
                                  p("E-mail: laura_melissa_guzman@sfu.ca"),
+                                 h4("Developers:"),
+                                 p("This app is developed by Laura Melissa Guzman, Tyler Kelly, Melissa Platsko, Leithen M'Gonigle, Lora Morandin and Elizabeth Elle in collaboration with Pollination Partnership and the Native Bee Society of British Columbia."),
+                                 h4("Data contributors:"),
+                                 p("The data for this app was collected by Dr. Elizabeth Elle."),
+                                 h4("Photo contributors:"),
+                                 p("The photos for this app were collected by Sarah Jonhnson."),
+                                 h4("References:"),
+                                 p("This app uses an algorithm to calculate the phenological coverage, this algorithm was originally presented in:"),
+                                 p("M'Gonigle, Williams, Lonsdorf, Kremen. (2016) A Tool for Selecting Plants When Restoring Habitat for Pollinators. Conservation Letters. 10(1): 105-111"),
                                  h4("Acknowledgements:"),
                                  p("We want to thank Sarah Jonhnson, Elijah Rejes, Claire Kremen, Carly McGregor, Matthew Pennell and the Native Bee Society of BC for feedback."))
                        
