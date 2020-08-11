@@ -60,7 +60,7 @@ eco_map <- leaflet(data = ecosec_map)
 pal <- c("#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17", "#004F2D")
 
 ## setting output directory for rds file for report
-output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees/tmp"
+output_dir <- "/home/lmguzman/ShinyApps/bc_bees/tmp"
 file_name <- "temp_output.rds"
 
 
@@ -729,7 +729,7 @@ shinyServer(function(input, output, session) {
         # Copy the report file to a temporary directory before processing it, in
         # case we don't have write permissions to the current working dir (which
         # can happen when deployed).
-        tempReport <- file.path(tempdir(), "report.Rmd")
+        tempReport <- file.path("tmp", "report.Rmd")
         file.copy("report.Rmd", tempReport, overwrite = TRUE)
         
         # Set up parameters to pass to Rmd document
