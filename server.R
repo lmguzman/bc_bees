@@ -1,3 +1,5 @@
+# loading packages
+
 library(dplyr)
 library(shiny)
 library(igraph)
@@ -23,11 +25,15 @@ library(ggiraph)
 library(gridExtra)
 library(htmlwidgets)
 library(forcats)
-source("R/functions.R")
 library(shinyalert)
+
+# source genetic algorithm functions
+source("R/functions.R")
+# source utilities for the app
 source("utils.R")
 
-db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
+# load database, and times
+db <- read.csv("data/site_net_loc_fil_links.csv", stringsAsFactors = FALSE)
 
 all_flowering_times <- readRDS("data/all_flowering_times.rds")
 
@@ -43,7 +49,6 @@ sections@data <- sections@data %>%
 target2 <- c("SGI", "NAL", "LIM", "FRL", "OKR", "SOB", "SPR", "LIM")
 ecosec <- subset(sections, ecosection_cd %in% target2)
 
-
 ecosec_data <- ecosec@data
 
 ecosec@data <- ecosec@data %>%
@@ -56,11 +61,16 @@ eco_map <- leaflet(data = ecosec_map)
 
 pal <- c("#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17", "#004F2D")
 
+## setting output directory for rds file for report
 output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees/tmp"
 file_name <- "temp_output.rds"
 
-# Define server logic required to draw a histogram
+
+### Start server part 
+
 shinyServer(function(input, output, session) {
+  
+  # Output for region plot 
   output$plot_region <- renderLeaflet({
 
     eco_map %>%
@@ -70,9 +80,11 @@ shinyServer(function(input, output, session) {
                 popup = paste0("<strong>Ecosection: </strong>", ecosec_data$ecosection_nm))
 
     })
+    
+    ## Observing event for region and type of network to show the species that are selectable for network
     observe({
         
-        # Can use character(0) to remove all choices
+        # Defines region
         nice_loc <- input$region
         
         if(nice_loc == "All"){
@@ -83,6 +95,7 @@ shinyServer(function(input, output, session) {
         
         names_to_use <- input$name_type
         
+        #Defines type of name to use
         if(names_to_use == "Common names"){
           fil_db$bee_sp <- fil_db$bee_common
           fil_db$plant_sp <- fil_db$plant_common
@@ -121,10 +134,14 @@ shinyServer(function(input, output, session) {
         
         
     })
+    
+    # Show help when the button is pressed
+
     observeEvent(input$help, {
-      # Show a modal when the button is pressed
       shinyalert(closeOnEsc = TRUE, closeOnClickOutside = TRUE, "Welcome to the BC pollinator app!", "This app allows you to interact with our most up to-date data on plants and pollinators of British Columbia. You can use this app to see which pollinators visit your favourite plant, find what plants maximize your pollinator diversity or find a set of plants that support your crop. If you need more help head to the 'help' tab")
     })
+    
+    ## Reactive event for "Get plants" activated by go button
     
     maxi_plants <- eventReactive(input$go,{
         
@@ -267,6 +284,8 @@ shinyServer(function(input, output, session) {
         max_plot
     })
     
+    ## reactive event for build network, activated with any action
+    
     plot_gg <- eventReactive(c(
         input$action_type,
         input$net_type,
@@ -342,13 +361,21 @@ shinyServer(function(input, output, session) {
               rownames_to_column("plant_common") %>%
               left_join(db[,c("plant_common", "plant_native", "plant_life_form")]) %>%
               distinct(plant_common, .keep_all = TRUE) %>%
-              dplyr::mutate(plant_native = capitalize(plant_native))
+              dplyr::mutate(plant_native = capitalize(plant_native)) 
+            plant_web_lab <- data.frame(plant_common = plant_att$plant_common) %>% 
+              left_join(db[,c("plant_common", "plant_wiki_common")]) %>% 
+              distinct() %>% 
+              dplyr::rename(label = plant_common, website = plant_wiki_common)
           } else{
             plant_att <- bip_table %>%
               rownames_to_column("plant_sp") %>%
               left_join(db[,c("plant_sp", "plant_native","plant_life_form")]) %>%
               distinct(plant_sp, .keep_all = TRUE) %>%
               dplyr::mutate(plant_native = capitalize(plant_native))
+            plant_web_lab <- data.frame(plant_sp = plant_att$plant_sp) %>% 
+              left_join(db[,c("plant_sp", "plant_wiki")]) %>% 
+              distinct() %>% 
+              dplyr::rename(label = plant_sp, website = plant_wiki)
           }
           
           #Pollinator attributes
@@ -363,6 +390,10 @@ shinyServer(function(input, output, session) {
                 dplyr::mutate(bee_diet = capitalize(bee_diet)) %>%
                 dplyr::mutate(group = case_when(bee_common == "BLANK" ~ "BLANK",
                                                 TRUE ~ "Insect"))
+              bee_web_lab <- data.frame(bee_common = insect_att$bee_common) %>% 
+                left_join(db[,c("bee_common", "bee_wiki_common")]) %>% 
+                distinct() %>% 
+                dplyr::rename(label = bee_common, website = bee_wiki_common)
             }else{
               insect_att <- bip_table %>%
                 rownames_to_column("plant_common") %>%
@@ -373,6 +404,10 @@ shinyServer(function(input, output, session) {
                 dplyr::mutate(bee_diet = capitalize(bee_diet)) %>%
                 dplyr::mutate(group = case_when(bee_common == "BLANK" ~ "BLANK",
                                                 TRUE ~ "Insect"))
+              bee_web_lab <- data.frame(bee_common = insect_att$bee_common) %>% 
+                left_join(db[,c("bee_common", "bee_wiki_common")]) %>% 
+                distinct() %>% 
+                dplyr::rename(label = bee_common, website = bee_wiki_common)
             }
           } else{ 
             if(type_net == "Pollinator"){
@@ -385,6 +420,10 @@ shinyServer(function(input, output, session) {
                 dplyr::mutate(bee_diet = capitalize(bee_diet)) %>%
                 dplyr::mutate(group = case_when(bee_sp == "BLANK" ~ "BLANK",
                                                 TRUE ~ "Insect"))
+              bee_web_lab <- data.frame(bee_sp = insect_att$bee_sp) %>% 
+                left_join(db[,c("bee_sp", "bee_wiki")]) %>% 
+                distinct() %>% 
+                dplyr::rename(label = bee_sp, website = bee_wiki)
             } else {
               insect_att <- bip_table %>%
                 rownames_to_column("plant_sp") %>%
@@ -395,6 +434,10 @@ shinyServer(function(input, output, session) {
                 dplyr::mutate(bee_diet = capitalize(bee_diet)) %>%
                 dplyr::mutate(group = case_when(bee_sp == "BLANK" ~ "BLANK",
                                                 TRUE ~ "Insect"))
+              bee_web_lab <- data.frame(bee_sp = insect_att$bee_sp) %>% 
+                left_join(db[,c("bee_sp", "bee_wiki")]) %>% 
+                distinct() %>% 
+                dplyr::rename(label = bee_sp, website = bee_wiki)
             }
           }
           
@@ -427,12 +470,19 @@ shinyServer(function(input, output, session) {
           # ggdata$alpha[ggdata$label == " "] <- NA
           # ggdata$label[is.na(ggdata$color)] <- NA
           
-          ggdata$sci_names <- str_extract(ggdata$label, '[A-Za-z]+')
+          #ggdata$sci_names <- str_extract(ggdata$label, '[A-Za-z]+')
           
-          ggdata$onclick <- sprintf("window.open(\"%s%s\")",
-                                    "http://en.wikipedia.org/wiki/", 
-                                    as.character(ggdata$sci_names))
+          #ggdata$onclick <- sprintf("window.open(\"%s%s\")",
+          #                          "http://en.wikipedia.org/wiki/", 
+          #                          as.character(ggdata$sci_names))
           
+          web_lab <- bind_rows(plant_web_lab, bee_web_lab)
+          
+          web_lab <- web_lab[match(ggdata$label, web_lab$label),]
+          
+          ggdata$onclick <- sprintf("window.open(\"%s\")", as.character(web_lab$website))
+          
+
           #make plot
           gg <- ggnet2(net,
                  label = FALSE,
@@ -465,6 +515,8 @@ shinyServer(function(input, output, session) {
 
     })
 
+    ### reactive event for support crop, activated with go button
+    
     plot_crop <- eventReactive(ignoreNULL = TRUE, 
       input$go2,{
         
@@ -650,6 +702,9 @@ shinyServer(function(input, output, session) {
         max_plot
     })
     
+    
+    ## Function that controls which event to respond to
+    
     plot_function <- function(act_type){
       if(act_type == "Build Network"){
         
@@ -661,6 +716,7 @@ shinyServer(function(input, output, session) {
         plot_crop()
       }
     }
+    
     # Make the plot
     output$plot1 <- renderGirafe({
       plot_function(act_type = input$action_type)
@@ -690,6 +746,8 @@ shinyServer(function(input, output, session) {
                           envir = new.env(parent = globalenv())
         )
     })
+    
+    ## Adds the feedback form
     formServer(formInfo)
     
 })

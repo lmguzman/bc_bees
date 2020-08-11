@@ -1,3 +1,5 @@
+## load packages 
+
 library(shiny)
 library(shinydashboard)
 library(rgdal)
@@ -15,16 +17,18 @@ library(htmlwidgets)
 library(shinyalert)
 library(shinyforms)
 source("utils.R")
-#reading in map data
 
-db <- read.csv("data/site_net_loc_fil.csv", stringsAsFactors = FALSE)
+
+#reading in data and map data
+
+db <- read.csv("data/site_net_loc_fil_links.csv", stringsAsFactors = FALSE)
 
 nice_locations <- unique(db$ecosection_nm)
 
 # Define UI for application that draws a histogram
 shinyUI(dashboardPage(
     
-    # Application title
+    # Application title and logo
     dashboardHeader(title= "Pollinators of \nBritish Columbia", titleWidth = 300,
                     tags$li(a(href = 'http://www.sfu.ca',
                               img(src = 'sfu_logo.png',
@@ -32,9 +36,12 @@ shinyUI(dashboardPage(
                               style = "padding-top:5px; padding-bottom:5px;"),
                             class = "dropdown")),
 
-    # Sidebar with a slider input for number of bins
+    # Sidebar with a input for region, name and main action
     dashboardSidebar(width = 450, 
+            # Plot with regions
             leafletOutput("plot_region", height = 300),
+            
+            # Alert of where do I start?
             useShinyalert(),  # Set up shinyalert
             actionButton("help", "Where do I start?"),
             selectInput(inputId = 'region',
@@ -51,6 +58,7 @@ shinyUI(dashboardPage(
                                          label = 'Type of Network',
                                          choices = c("Pollinator", "Plant")),
                              
+                             # conditional pannel for type of network once build network is selected
                              
                              conditionalPanel('input.net_type == "Pollinator"', 
                                               selectInput(inputId = 'bees',
@@ -64,6 +72,8 @@ shinyUI(dashboardPage(
                                                           choices = c("plant1", 'plant2'), 
                                                           multiple = TRUE)
                              )),
+            # conditional panel for selecting get plants
+            
             conditionalPanel('input.action_type == "Get plants"',
                              selectInput(inputId = 'maximizer',
                                          label = 'Maximize:',
@@ -76,6 +86,9 @@ shinyUI(dashboardPage(
                                                 choices = c("Herb","Shrub","Vine","Tree","Various")),
                              numericInput("n_plants", "Number of plants:", 10, min = 2, max = 100),
                              actionButton("go", "Go")),
+            
+            # conditional panel for selecting suppoting crop 
+            
             conditionalPanel('input.action_type == "Support crop"',
                              selectInput(inputId = 'crop',
                                          label = 'Crop:',
@@ -96,9 +109,16 @@ shinyUI(dashboardPage(
         # Show a plot of the generated distribution
         dashboardBody(
             
+            # have 4 tabs
             tabsetPanel(type = "tabs",
+                        # Tab for the main plot
+                        
+                        # Render girafe plot
                         tabPanel("Plot", fluidRow(girafeOutput("plot1")),
+                                 # button for generating report
                                  fluidRow(downloadButton("report", "Generate report"))),
+                        
+                        # Tab for help 
                         tabPanel("Help", 
                                  h3("Region"),
                                  p("The map shows the regions where we currently have data from, and the names of the regions. You can select the region on the dropdown menu called 'Region'"),
@@ -112,15 +132,20 @@ shinyUI(dashboardPage(
                                  p("This feature allows you to choose any number of plants that can maximize pollinator diversity (number of pollinator species supported), pollinator abundance (total number of pollinators supported) and phenological coverage (the most number of weeks of the year where plants are flowring and support the highest diversity)"),
                                  h4("Support crop"), 
                                  p("You can also choose a crop you want to support with a flower strip or a hedgerow. In BC we currently have the options for blueberries, cranberries and apples. Based on the crop you select and the features of the plants you select, we find the plants that have known pollinator visitors to those crops and then maximize the phenological coverage.")),
+                        
+                        # tab for feedback 
+                        
                         tabPanel("Feedback", 
                                  fluidRow(h4("This app is a work in progress"),
                                           p("Here are some of the features we want to implement in the future:"),
                                           p("* Add more images of both the plants and pollinators"),
                                           p("* Expand the geographic range to include Western North America"),
-                                          p("* Include citizen science data"),
+                                          p("* Include citizen science data and other sources of data"),
                                           p(""),
                                           h4("If you have any feedback for us or would like to contribute data, please fill the following form")),
                                  fluidRow(formUI(formInfo))),
+                        
+                        ## tab for contributors 
                         tabPanel("Contributors", 
                                  h4("Developers:"),
                                  p("This app is developed by Laura Melissa Guzman, Tyler Kelly, Melissa Platsko, Leithen M'Gonigle, Lora Morandin and Elizabeth Elle in collaboration with Pollination Partnership and the Native Bee Society of British Columbia"),

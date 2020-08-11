@@ -215,6 +215,22 @@ db2 <- db2 %>%
 
 write.csv(db2, "data/site_net_loc_fil.csv", row.names = FALSE)
 
+### adding web links ###
+
+db3 <- read.csv("data/site_net_loc_fil.csv")
+
+bee_links <- read.csv("raw_data/pollinator_app - unique_bee.csv") %>% 
+  dplyr::select(bee_sp, bee_wiki = Wikipedia, bee_other_web = Canada_bee, bee_wiki_common = Wikipedia_common, bee_other_web_common = Canada_bee_common)
+
+plant_links <- read.csv("raw_data/pollinator_app - unique_plant.csv") %>% 
+  dplyr::select(plant_sp, plant_wiki = Wikipedia, plant_other_web = pacific.north.west.consortium, plant_wiki_common = Wikipedia_common, plant_other_web_common = pacific.north.west.consortium_common)
+
+
+db4 <- db3 %>% 
+  left_join(bee_links) %>% 
+  left_join(plant_links)
+
+write.csv(db4, "data/site_net_loc_fil_links.csv", row.names = FALSE)
 
 ##### add blooming times  ###
 
@@ -235,9 +251,9 @@ all_flying_times <- plant_bee_table %>%
   dplyr::select(Day0, Mon0, Yr0, bee_sp) %>% 
   dplyr::mutate(date = paste(Day0, Mon0, Yr0, sep = "-")) %>% 
   dplyr::mutate(date = dmy(date)) %>% 
-  dplyr::mutate(month = month(date), week = week(date)) %>% 
+  dplyr::mutate(month = month(date), week = week(date)) %>%
   dplyr::group_by(bee_sp) %>% 
-  dplyr::summarise(min = min(week),max =  max(week)) %>% 
+  dplyr::summarise(min = round(quantile(week, 0.1)), max = round(quantile(week, 0.9))) %>% 
   filter(bee_sp %in% unique(db3$bee_sp)) %>% 
   split(.$bee_sp) %>% 
   map(~seq(.x$min, .x$max, 1))
@@ -248,7 +264,7 @@ all_flowering_times <- plant_bee_table %>%
   dplyr::mutate(date = dmy(date)) %>% 
   dplyr::mutate(month = month(date), week = week(date)) %>% 
   dplyr::group_by(plant_sp) %>% 
-  dplyr::summarise(min = min(week),max =  max(week)) %>% 
+  dplyr::summarise(min = round(quantile(week, 0.1)), max = round(quantile(week, 0.9))) %>% 
   dplyr::mutate(plant_sp = str_replace(plant_sp, " ", "\n")) %>% 
   filter(plant_sp %in% unique(db3$plant_sp)) %>% 
   split(.$plant_sp) %>% 
