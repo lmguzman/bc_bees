@@ -2,16 +2,15 @@
 
 library(shiny)
 library(shinydashboard)
-library(rgdal)
+library(rgdal) # not installed 
 library(leaflet)
 library(sp)
 library(ggplot2)
 library(ggmap)
-library(cartography)
 library(cowplot)
 library(dplyr)
 library(purrr)
-library(ggiraph)
+library(ggiraph) #not installed 
 library(gridExtra)
 library(htmlwidgets)
 library(shinyalert)
