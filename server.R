@@ -179,6 +179,10 @@ shinyServer(function(input, output, session) {
           n_plants <- length(unique(fil_db$plant_sp))
         }
         
+        validate(
+          need(nrow(fil_db) > 0, "There are no plants under these options, try broadening your options")
+        )
+        
         if(input$maximizer == "Pollinator abundance"){
             
             pl_sp <- names(sort(table(fil_db$plant_sp), decreasing = TRUE)[1:n_plants])
@@ -202,6 +206,10 @@ shinyServer(function(input, output, session) {
           all_flowering_times_2 <- all_flowering_times[unlist(in_week)]
           
           fil_db_2 <- fil_db[which(fil_db$plant_sp  %in% names(all_flowering_times_2)),]
+          
+          validate(
+            need(nrow(fil_db_2) > n_plants, "There are not enough plants under these options, try broadening your options")
+          )
           
           flight.times.act <- all_flying_times[unique(fil_db_2$bee_sp)]
           
@@ -603,6 +611,10 @@ shinyServer(function(input, output, session) {
       all_flowering_times_2 <- all_flowering_times[unlist(in_week)]
       
       fil_db_1 <- fil_db_1[which(fil_db_1$plant_sp  %in% names(all_flowering_times_2)),]
+      
+      validate(
+        need(nrow(fil_db_1) > n_plants_2, "There are not enough plants under these options, try broadening your options")
+      )
       
       if(input$overlap_2 == 'Yes'){
         
