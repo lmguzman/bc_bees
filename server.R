@@ -24,6 +24,7 @@ library(gridExtra)
 library(htmlwidgets)
 library(forcats)
 library(shinyalert)
+library(lubridate)
 
 # source genetic algorithm functions
 source("R/functions.R")
@@ -60,8 +61,8 @@ eco_map <- leaflet(data = ecosec_map)
 pal <- c("#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17", "#004F2D")
 
 ## setting output directory for rds file for report
-output_dir <- "/home/lmguzman/ShinyApps/bc_bees/tmp"
-#output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees"
+#output_dir <- "/home/lmguzman/ShinyApps/bc_bees/tmp"
+output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees/tmp"
 file_name <- "temp_output.rds"
 
 
@@ -189,11 +190,20 @@ shinyServer(function(input, output, session) {
             
         }else if(input$maximizer == "Phenological coverage"){
           
-          flight.times.act <- all_flying_times[unique(fil_db$bee_sp)]
+          week1 <- week(input$dateRange1[1])
+          week2 <- week(input$dateRange1[2])
           
-          bloom.times.act <- all_flowering_times[unique(fil_db$plant_sp)] 
+          in_week <- lapply(all_flowering_times, FUN = function(x) any(x > week1 & x < week2))
           
-          v.mat.act <- dplyr::select(fil_db, plant_sp, bee_sp) %>% 
+          all_flowering_times_2 <- all_flowering_times[unlist(in_week)]
+          
+          fil_db_2 <- fil_db[which(fil_db$plant_sp  %in% names(all_flowering_times_2)),]
+          
+          flight.times.act <- all_flying_times[unique(fil_db_2$bee_sp)]
+          
+          bloom.times.act <- all_flowering_times_2[unique(fil_db_2$plant_sp)] 
+          
+          v.mat.act <- dplyr::select(fil_db_2, plant_sp, bee_sp) %>% 
             unique() %>% dplyr::mutate(int = 1) %>% 
             pivot_wider(names_from = 'plant_sp', values_from = 'int', values_fill = list(int = 0)) %>% 
             tibble::column_to_rownames('bee_sp') %>% 
@@ -246,19 +256,21 @@ shinyServer(function(input, output, session) {
         
         if(input$maximizer == "Phenological coverage"){
           saveRDS(fil_bloom_times, file = file.path(output_dir, file_name))
+          week1 <- week(input$dateRange1[1])
+          week2 <- week(input$dateRange1[2])
           
           if(names_to_use == "Common names"){
             max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_common), shape = 15, size = 10, colour = "#FCBA04") +
               theme_cowplot() + scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar",
                                                                                                         "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
                                                    sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
-              xlab("") + ylab("")
+              xlab("") + ylab("") + geom_vline(aes(xintercept = week1)) + geom_vline(aes(xintercept = week2))
           }else{
             max_plot <- ggplot(fil_bloom_times) + geom_point(aes(x = week, y = plant_sp), shape = 15, size = 10, colour = "#FCBA04") +
               theme_cowplot() + scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), labels = c("Jan", "Feb", "Mar",
                                                                                                         "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
                                                    sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
-              xlab("") + ylab("")
+              xlab("") + ylab("")+ geom_vline(aes(xintercept = week1)) + geom_vline(aes(xintercept = week2))
           }
         }else if(input$maximizer == "Pollinator abundance"){
           saveRDS(fil2_db, file = file.path(output_dir, file_name))
@@ -575,13 +587,22 @@ shinyServer(function(input, output, session) {
         n_plants_2 <- length(unique(fil_db_1$plant_sp))
       }
       
+      week1 <- week(input$dateRange2[1])
+      week2 <- week(input$dateRange2[2])
+      
+      in_week <- lapply(all_flowering_times, FUN = function(x) any(x > week1 & x < week2))
+      
+      all_flowering_times_2 <- all_flowering_times[unlist(in_week)]
+      
+      fil_db_1 <- fil_db_1[which(fil_db_1$plant_sp  %in% names(all_flowering_times_2)),]
+      
       if(input$overlap_2 == 'Yes'){
         
         fil_db <- fil_db_1[fil_db_1$plant_common != crop_type,]
       
         flight.times.act <- all_flying_times[unique(fil_db$bee_sp)]
         
-        bloom.times.act <- all_flowering_times[unique(fil_db$plant_sp)]
+        bloom.times.act <- all_flowering_times_2[unique(fil_db$plant_sp)]
         
         v.mat.act <- dplyr::select(fil_db, plant_sp, bee_sp) %>% 
           unique() %>% dplyr::mutate(int = 1) %>% 
@@ -610,6 +631,7 @@ shinyServer(function(input, output, session) {
         
         if(!(crop_type %in% unique(fil_db_1$plant_common))){
           fil_db <- rbind(fil_db_1, fil_db_crop)
+          all_flowering_times_2[[unique(fil_db_crop$plant_sp)]] <- all_flowering_times[[unique(fil_db_crop$plant_sp)]]
         }else{
           fil_db <- fil_db_1
         }
@@ -618,7 +640,7 @@ shinyServer(function(input, output, session) {
         
         flight.times.act <- all_flying_times[unique(fil_db$bee_sp)]
         
-        bloom.times.act <- all_flowering_times[unique(fil_db$plant_sp)]
+        bloom.times.act <- all_flowering_times_2[unique(fil_db$plant_sp)]
         
         v.mat.act <- dplyr::select(fil_db, plant_sp, bee_sp) %>% 
           unique() %>% dplyr::mutate(int = 1) %>% 
@@ -681,7 +703,7 @@ shinyServer(function(input, output, session) {
             scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), 
                                labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
                                sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
-            xlab("") + ylab("")
+            xlab("") + ylab("")+ geom_vline(aes(xintercept = week1)) + geom_vline(aes(xintercept = week2))
           
           max_plot <- max_plot + 
             scale_color_manual(values = c("Crop" = "#3182bd", "Other" = "#2ca25f")) + 
@@ -694,7 +716,7 @@ shinyServer(function(input, output, session) {
             scale_x_continuous(limits = c(1,52), breaks = seq(1,52,4.5), 
                                labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
                                 sec.axis = sec_axis(trans = ~ .,name = 'Week', breaks = seq(1, 52, 3))) +
-            xlab("") + ylab("")
+            xlab("") + ylab("")+ geom_vline(aes(xintercept = week1)) + geom_vline(aes(xintercept = week2))
           
           max_plot <- max_plot + 
             scale_color_manual(values = c("Crop" = "#3182bd", "Other" = "#2ca25f")) + 

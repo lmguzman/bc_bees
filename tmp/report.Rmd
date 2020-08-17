@@ -43,8 +43,13 @@ if(params$chosen_things$action_type == "Build Network"){
   }else{
     shrub <-params$chosen_things$shrub
   }
-  second_options <- data.frame(maximizer = params$chosen_things$maximizer, native_p = native, plant_type = shrub, n_plant = params$chosen_things$n_plants)
+  if(params$chosen_things$maximizer == "Phenological coverage"){
+    second_options <- data.frame(maximizer = params$chosen_things$maximizer, native_p = native, plant_type = shrub, n_plant = params$chosen_things$n_plants, week1 = params$chosen_things$dateRange1[1], week2 = params$chosen_things$dateRange2[2])
+  colnames(second_options) <- c("How do we select plants?", "Native plants", "Type of plants", "Number of plants", "Flowering range start", "Flowering range end")
+  }else{
+    second_options <- data.frame(maximizer = params$chosen_things$maximizer, native_p = native, plant_type = shrub, n_plant = params$chosen_things$n_plants)
   colnames(second_options) <- c("How do we select plants?", "Native plants", "Type of plants", "Number of plants")
+  }
 }else if(params$chosen_things$action_type == "Support crop"){
   if(is.null(params$chosen_things$native_2)){
     native_2 <- "None selected"
@@ -56,8 +61,8 @@ if(params$chosen_things$action_type == "Build Network"){
   }else{
     shrub_2 <-params$chosen_things$shrub_2
   }
-  second_options <- data.frame(crop = params$chosen_things$crop, native_p = native_2, plant_type = shrub_2, n_plant = params$chosen_things$n_plants_2, overlap = params$chosen_things$overlap_2)
-  colnames(second_options) <- c("What crop do you want to support?", "Native plants", "Type of plants", "Number of plants", "Should plants overlap with crop?")
+  second_options <- data.frame(crop = params$chosen_things$crop, native_p = native_2, plant_type = shrub_2, n_plant = params$chosen_things$n_plants_2, overlap = params$chosen_things$overlap_2, week1 = params$chosen_things$dateRange2[1], week2 = params$chosen_things$dateRange2[2])
+  colnames(second_options) <- c("What crop do you want to support?", "Native plants", "Type of plants", "Number of plants", "Should plants overlap with crop?", "Flowering range start", "Flowering range end")
 }
 knitr::kable(second_options)
 ```
@@ -75,8 +80,8 @@ params$plot_rep
 ## Summary
 
 ```{r message=FALSE}
-output_dir <- "/home/lmguzman/ShinyApps/bc_bees/"
-#output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees"
+#output_dir <- "/home/lmguzman/ShinyApps/bc_bees/"
+output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees"
 file_name <- "tmp/temp_output.rds"
 db <- read.csv(file.path(output_dir, "data/site_net_loc_fil_links.csv"), stringsAsFactors = FALSE)
 

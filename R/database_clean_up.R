@@ -294,3 +294,21 @@ unique_plant <- db2 %>%
   arrange(plant_sp)
 
 write.csv(unique_plant, "data/unique_plant.csv", row.names = FALSE)
+
+
+## For elizabeth ##
+
+# db3 <- read.csv("data/site_net_loc_fil.csv")
+# 
+# plant_links <- read.csv("raw_data/pollinator_app - unique_plant.csv") %>% 
+#   dplyr::select(plant_sp, Invasive_non_invasive) 
+# 
+# 
+# native_invasive <- db3 %>% 
+#   dplyr::select(plant_sp, plant_native) %>% 
+#   distinct() %>% 
+#   left_join(plant_links) %>% 
+#   mutate(plant_sp = str_replace(plant_sp, "\n", " "))
+# 
+# write.csv(native_invasive, "Screen_shots_Lora/native_invasive.csv", row.names = FALSE)
+# 
