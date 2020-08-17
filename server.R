@@ -207,8 +207,8 @@ shinyServer(function(input, output, session) {
           
           fil_db_2 <- fil_db[which(fil_db$plant_sp  %in% names(all_flowering_times_2)),]
           
-          validate(
-            need(nrow(fil_db_2) > n_plants, "There are not enough plants under these options, try broadening your options")
+          validate(## check number of unique plants not just nrow
+            need(length(unique(fil_db_2$plant_sp)) > n_plants, "There are not enough plants under these options, try broadening your options")
           )
           
           flight.times.act <- all_flying_times[unique(fil_db_2$bee_sp)]
@@ -612,8 +612,8 @@ shinyServer(function(input, output, session) {
       
       fil_db_1 <- fil_db_1[which(fil_db_1$plant_sp  %in% names(all_flowering_times_2)),]
       
-      validate(
-        need(nrow(fil_db_1) > n_plants_2, "There are not enough plants under these options, try broadening your options")
+      validate(## check number of unique plants not just nrow
+        need(length(unique(fil_db_1$plant_sp)) > n_plants_2, "There are not enough plants under these options, try broadening your options")
       )
       
       if(input$overlap_2 == 'Yes'){
