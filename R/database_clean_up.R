@@ -223,7 +223,11 @@ bee_links <- read.csv("raw_data/pollinator_app - unique_bee.csv") %>%
   dplyr::select(bee_sp, bee_wiki = Wikipedia, bee_other_web = Canada_bee, bee_wiki_common = Wikipedia_common, bee_other_web_common = Canada_bee_common)
 
 plant_links <- read.csv("raw_data/pollinator_app - unique_plant.csv") %>% 
-  dplyr::select(plant_sp, plant_wiki = Wikipedia, plant_other_web = pacific.north.west.consortium, plant_wiki_common = Wikipedia_common, plant_other_web_common = pacific.north.west.consortium_common)
+  dplyr::select(plant_sp, plant_wiki = Wikipedia, plant_other_web = pacific.north.west.consortium, plant_wiki_common = Wikipedia_common, plant_other_web_common = pacific.north.west.consortium_common, plant_invasive = Invasive_non_invasive) %>% 
+  dplyr::mutate(plant_invasive = as.character(plant_invasive)) %>% 
+  dplyr::mutate(plant_invasive = ifelse(plant_invasive == "Certain Species", "Certain species", plant_invasive)) %>% 
+  dplyr::mutate(plant_invasive2 = str_extract(plant_invasive, "Invasive|Non-invasive|Certain species|Both")) %>% 
+  dplyr::select(-plant_invasive)
 
 
 db4 <- db3 %>% 

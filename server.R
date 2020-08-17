@@ -153,16 +153,20 @@ shinyServer(function(input, output, session) {
             fil_db <- db[db$ecosection_nm == nice_loc,]
         }
         
-        plant_native <- if(all(input$native == "Native")){
-          c("native", "both")
-        }else if(all(input$native == "Non-Native")){
-          c("non-native", "both")
-        }else{
-          c("native", "non-native", "both")
+        if(all(input$native == "Native")){
+          plant_native <-  c("native", "both")
+          plant_invasive <- c("Non-invasive", "Both", "Certain species")
+        }else if(all(input$native == "Non-Native and Non-Invasive")){
+          plant_native <-  c("non-native", "both")
+          plant_invasive <- c("Non-invasive", "Both", "Certain species")
+        }else if(all(input$native == "Non-Native and Invasive")){
+          plant_native <- c("non-native", "both")
+          plant_invasive <- c("Invasive", "Both", "Certain species")
+          
         }
         
         if(!is.null(plant_native)){
-          fil_db <- fil_db[fil_db$plant_native %in% plant_native,]
+          fil_db <- fil_db[(fil_db$plant_native %in% plant_native & fil_db$plant_invasive2 %in% plant_invasive),]
         }
         
         if(!is.null(input$shrub)){
@@ -557,16 +561,20 @@ shinyServer(function(input, output, session) {
       
       fil_db_crop <-fil_db_1[fil_db_1$plant_common == crop_type,]
       
-      plant_native <- if(all(input$native_2 == "Native")){
-        c("native", "both")
-      }else if(all(input$native_2 == "Non-Native")){
-        c("non-native", "both")
-      }else{
-        c("native", "non-native", "both")
+      if(all(input$native_2 == "Native")){
+        plant_native <-  c("native", "both")
+        plant_invasive <- c("Non-invasive", "Both", "Certain species")
+      }else if(all(input$native_2 == "Non-Native and Non-Invasive")){
+        plant_native <-  c("non-native", "both")
+        plant_invasive <- c("Non-invasive", "Both", "Certain species")
+      }else if(all(input$native_2 == "Non-Native and Invasive")){
+        plant_native <- c("non-native", "both")
+        plant_invasive <- c("Invasive", "Both", "Certain species")
+        
       }
       
       if(!is.null(plant_native)){
-        fil_db_1 <- fil_db_1[fil_db_1$plant_native %in% plant_native,]
+        fil_db_1 <- fil_db_1[(fil_db_1$plant_native %in% plant_native & fil_db_1$plant_invasive2 %in% plant_invasive),]
       }
       
       if(!is.null(input$shrub_2)){
