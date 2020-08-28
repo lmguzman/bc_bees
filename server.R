@@ -2,7 +2,6 @@
 
 library(dplyr)
 library(shiny)
-library(igraph)
 library(GGally)
 library(stringr)
 library(network)
@@ -61,8 +60,8 @@ eco_map <- leaflet(data = ecosec_map)
 pal <- c("#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17", "#004F2D")
 
 ## setting output directory for rds file for report
-output_dir <- "/home/lmguzman/ShinyApps/bc_bees/tmp"
-#output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees/tmp"
+#output_dir <- "/home/lmguzman/ShinyApps/bc_bees/tmp"
+output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees/tmp"
 file_name <- "temp_output.rds"
 
 
@@ -105,8 +104,13 @@ shinyServer(function(input, output, session) {
         
         if(type_net == "Pollinator"){
             
-            t_bees <- table(fil_db$bee_sp)
-            avail_bees <- sort(names(t_bees)[t_bees >1])
+            t_bees <- distinct(fil_db[, c("bee_sp", "bee_guild_otro")])
+            avail_bees <- split(t_bees$bee_sp, t_bees$bee_guild_otro)
+            
+            bee_length <- lapply(avail_bees, FUN = length)
+            if(any(bee_length == 1)){
+              avail_bees[bee_length ==1] <- lapply(avail_bees[bee_length ==1], FUN = function(x) c(x, ""))
+            } 
             
             if (is.null(avail_bees))
                 avail_bees <- character(0)
@@ -118,9 +122,8 @@ shinyServer(function(input, output, session) {
             )
         }else{
             
-            t_plants <- table(fil_db$plant_sp)
-            
-            avail_plants <- sort(names(t_plants)[t_plants >1])
+            t_plants <- distinct(fil_db[, c("plant_sp", "plant_life_form")])
+            avail_plants <- split(t_plants$plant_sp, t_plants$plant_life_form)
             
             if (is.null(avail_plants))
                 avail_plants <- character(0)
@@ -154,19 +157,19 @@ shinyServer(function(input, output, session) {
         }
         
         if(all(input$native == "Native")){
-          plant_native <-  c("native", "both")
-          plant_invasive <- c("Non-invasive", "Both", "Certain species")
+          plant_native <-  c("native", "some native")
+          plant_invasive <- c("Non-invasive", "Some invasive")
         }else if(all(input$native == "Non-Native and Non-Invasive")){
-          plant_native <-  c("non-native", "both")
-          plant_invasive <- c("Non-invasive", "Both", "Certain species")
+          plant_native <-  c("non-native", "some native")
+          plant_invasive <- c("Non-invasive", "Some invasive")
         }else if(all(input$native == "Non-Native and Invasive")){
-          plant_native <- c("non-native", "both")
-          plant_invasive <- c("Invasive", "Both", "Certain species")
+          plant_native <- c("non-native", "some native")
+          plant_invasive <- c("Invasive", "Some invasive")
           
         }
         
         if(!is.null(plant_native)){
-          fil_db <- fil_db[(fil_db$plant_native %in% plant_native & fil_db$plant_invasive2 %in% plant_invasive),]
+          fil_db <- fil_db[(fil_db$plant_native %in% plant_native & fil_db$plant_invasive %in% plant_invasive),]
         }
         
         if(!is.null(input$shrub)){
@@ -385,6 +388,10 @@ shinyServer(function(input, output, session) {
               tibble::column_to_rownames("plant_sp")  
           }
           
+          validate(## check that bip table has something
+             need(nrow(bip_table) > 1 | ncol(bip_table) > 1, "There are not enough species under these options, try broadening your options")
+           )
+          
           saveRDS(bip_table, file = file.path(output_dir, file_name))
           
           net <- bip_table %>% 
@@ -397,9 +404,13 @@ shinyServer(function(input, output, session) {
           if(names_to_use == "Common names"){
             plant_att <- bip_table %>%
               rownames_to_column("plant_common") %>%
-              left_join(db[,c("plant_common", "plant_native", "plant_life_form")]) %>%
+              left_join(db[,c("plant_common", "plant_native", "plant_life_form", "plant_invasive")]) %>%
               distinct(plant_common, .keep_all = TRUE) %>%
-              dplyr::mutate(plant_native = capitalize(plant_native)) 
+              dplyr::mutate(plant_native = paste(plant_native, plant_invasive, sep = " and ")) %>% 
+              dplyr::select(-plant_invasive) %>% 
+              dplyr::mutate(plant_native = capitalize(plant_native)) %>% 
+              dplyr::mutate(plant_native = ifelse(plant_native == "NA and NA", NA, plant_native))
+            
             plant_web_lab <- data.frame(plant_common = plant_att$plant_common) %>% 
               left_join(db[,c("plant_common", "plant_wiki_common")]) %>% 
               distinct() %>% 
@@ -407,9 +418,12 @@ shinyServer(function(input, output, session) {
           } else{
             plant_att <- bip_table %>%
               rownames_to_column("plant_sp") %>%
-              left_join(db[,c("plant_sp", "plant_native","plant_life_form")]) %>%
+              left_join(db[,c("plant_sp", "plant_native","plant_life_form", "plant_invasive")]) %>%
               distinct(plant_sp, .keep_all = TRUE) %>%
-              dplyr::mutate(plant_native = capitalize(plant_native))
+              dplyr::mutate(plant_native = paste(plant_native, plant_invasive, sep = " and ")) %>% 
+              dplyr::select(-plant_invasive) %>% 
+              dplyr::mutate(plant_native = capitalize(plant_native)) %>% 
+              dplyr::mutate(plant_native = ifelse(plant_native == "NA and NA", NA, plant_native))
             plant_web_lab <- data.frame(plant_sp = plant_att$plant_sp) %>% 
               left_join(db[,c("plant_sp", "plant_wiki")]) %>% 
               distinct() %>% 
@@ -432,7 +446,7 @@ shinyServer(function(input, output, session) {
                 left_join(db[,c("bee_common", "bee_wiki_common")]) %>% 
                 distinct() %>% 
                 dplyr::rename(label = bee_common, website = bee_wiki_common)
-            }else{
+            }else if(type_net == "Plant"){
               insect_att <- bip_table %>%
                 rownames_to_column("plant_common") %>%
                 pivot_longer(-plant_common, "bee_common", values_to = "count") %>%
@@ -447,7 +461,7 @@ shinyServer(function(input, output, session) {
                 distinct() %>% 
                 dplyr::rename(label = bee_common, website = bee_wiki_common)
             }
-          } else{ 
+          } else if(names_to_use == "Scientific names"){ 
             if(type_net == "Pollinator"){
               insect_att <- bip_table %>%
                 rownames_to_column("plant_sp") %>%
@@ -462,7 +476,7 @@ shinyServer(function(input, output, session) {
                 left_join(db[,c("bee_sp", "bee_wiki")]) %>% 
                 distinct() %>% 
                 dplyr::rename(label = bee_sp, website = bee_wiki)
-            } else {
+            } else if(type_net == "Plant"){
               insect_att <- bip_table %>%
                 rownames_to_column("plant_sp") %>%
                 pivot_longer(-plant_sp, "bee_sp", values_to = "count") %>%
@@ -480,7 +494,9 @@ shinyServer(function(input, output, session) {
           }
           
           #Set colour of nodes based on Phono
-          col <- c("Native"= "#18b583", "Non-native"="#f4a582", "Insect"="#1092de", "Both" = "#fa9fb5")
+          col <- c("Insect"="#F4F1E2", "Native and Non-invasive"= "#3BBA6C", "Native and Some invasive"= "#4E8FA6",
+                   "Non-native and Non-invasive" = "#307371", "Non-native and Some invasive" = "#B99650", "Non-native and Invasive"="#D2664B",
+                   "Some native and Non-invasive" = "#F8CE62", "Some native and Some invasive" = "#FF9233")
           net %v% "phono" = c(plant_att$plant_native, insect_att$group)
           
           alp <- c("Pollenivore"= 1, "Herbivore"=1, "Predator"=1, "Parasite"= 1, "Detritivore"=1, 
@@ -535,8 +551,8 @@ shinyServer(function(input, output, session) {
             geom_point_interactive(aes(color = color, tooltip = ggdata$alpha, data_id = ggdata$alpha, onclick = ggdata$onclick), size = 30) +
             geom_text(aes(label = label), color = "black", size = 9) + 
             labs(caption = "Click on circle to go Wikipedia page!") +
-            theme(legend.text = element_text(color = "red", size = 30),
-                  legend.position = c(.8, 0.0),
+            theme(legend.text = element_text(color = "black", size = 25),
+                  legend.position = c(.6, 0.0),
                   legend.direction = "horizontal",
                   plot.caption = element_text(color = "black", size = 20, hjust = 0))
           
@@ -570,19 +586,19 @@ shinyServer(function(input, output, session) {
       fil_db_crop <-fil_db_1[fil_db_1$plant_common == crop_type,]
       
       if(all(input$native_2 == "Native")){
-        plant_native <-  c("native", "both")
-        plant_invasive <- c("Non-invasive", "Both", "Certain species")
+        plant_native <-  c("native", "some native")
+        plant_invasive <- c("Non-invasive", "Some invasive")
       }else if(all(input$native_2 == "Non-Native and Non-Invasive")){
-        plant_native <-  c("non-native", "both")
-        plant_invasive <- c("Non-invasive", "Both", "Certain species")
+        plant_native <-  c("non-native", "some native")
+        plant_invasive <- c("Non-invasive", "Some invasive")
       }else if(all(input$native_2 == "Non-Native and Invasive")){
-        plant_native <- c("non-native", "both")
-        plant_invasive <- c("Invasive", "Both", "Certain species")
+        plant_native <- c("non-native", "some native")
+        plant_invasive <- c("Invasive", "Some invasive")
         
       }
       
       if(!is.null(plant_native)){
-        fil_db_1 <- fil_db_1[(fil_db_1$plant_native %in% plant_native & fil_db_1$plant_invasive2 %in% plant_invasive),]
+        fil_db_1 <- fil_db_1[(fil_db_1$plant_native %in% plant_native & fil_db_1$plant_invasive %in% plant_invasive),]
       }
       
       if(!is.null(input$shrub_2)){
@@ -713,8 +729,13 @@ shinyServer(function(input, output, session) {
         
         names_to_use <- input$name_type
         
-        saveRDS(fil_bloom_times, file = file.path(output_dir, file_name))
+        if(input$crop == "Cranberry"){
+          fil_bloom_times <- fil_bloom_times %>% 
+            filter(plant_common != "Blueberry")
+        }
         
+        saveRDS(fil_bloom_times, file = file.path(output_dir, file_name))
+      
         if(names_to_use == "Common names"){
           
           max_plot <- ggplot(fil_bloom_times) + 

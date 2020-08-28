@@ -117,7 +117,7 @@ if(params$chosen_things$action_type == "Build Network"){
     summarise(n_obs = n()) %>% 
     left_join(plant_trait)
 
-  colnames(output_table)  <- c("Plant species", "Pollinator guild", "Number of observations", "Plant native", "Plant life form")
+  colnames(output_table)  <- c("Plant species", "Pollinator guild", "Number of observations", "Plant native", "Plant Invasiveness", "Plant life form")
 }else if((params$chosen_things$action_type == "Get plants" & params$chosen_things$maximizer == "Phenological coverage") | params$chosen_things$action_type == "Support crop"){
   
     output_table <- temp_data %>% 

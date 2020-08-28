@@ -80,8 +80,8 @@ params$plot_rep
 ## Summary
 
 ```{r message=FALSE}
-output_dir <- "/home/lmguzman/ShinyApps/bc_bees/"
-#output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees"
+#output_dir <- "/home/lmguzman/ShinyApps/bc_bees/"
+output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees"
 file_name <- "tmp/temp_output.rds"
 db <- read.csv(file.path(output_dir, "data/site_net_loc_fil_links.csv"), stringsAsFactors = FALSE)
 

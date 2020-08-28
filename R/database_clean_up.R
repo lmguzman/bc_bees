@@ -223,16 +223,18 @@ bee_links <- read.csv("raw_data/pollinator_app - unique_bee.csv") %>%
   dplyr::select(bee_sp, bee_wiki = Wikipedia, bee_other_web = Canada_bee, bee_wiki_common = Wikipedia_common, bee_other_web_common = Canada_bee_common)
 
 plant_links <- read.csv("raw_data/pollinator_app - unique_plant.csv") %>% 
-  dplyr::select(plant_sp, plant_wiki = Wikipedia, plant_other_web = pacific.north.west.consortium, plant_wiki_common = Wikipedia_common, plant_other_web_common = pacific.north.west.consortium_common, plant_invasive = Invasive_non_invasive) %>% 
-  dplyr::mutate(plant_invasive = as.character(plant_invasive)) %>% 
-  dplyr::mutate(plant_invasive = ifelse(plant_invasive == "Certain Species", "Certain species", plant_invasive)) %>% 
-  dplyr::mutate(plant_invasive2 = str_extract(plant_invasive, "Invasive|Non-invasive|Certain species|Both")) %>% 
-  dplyr::select(-plant_invasive)
+  dplyr::select(plant_sp, plant_wiki = Wikipedia, plant_other_web = pacific.north.west.consortium, plant_wiki_common = Wikipedia_common, plant_other_web_common = pacific.north.west.consortium_common)  
 
+plant_native <- read.csv("raw_data/native_invasive EE.csv", stringsAsFactors = FALSE) %>% 
+  dplyr::select(plant_sp, plant_native, plant_invasive) %>% 
+  dplyr::mutate(plant_sp = str_replace(plant_sp, " ", "\n")) %>% 
+  dplyr::mutate(plant_invasive = str_trim(plant_invasive))
 
 db4 <- db3 %>% 
+  dplyr::select(-plant_native) %>% 
   left_join(bee_links) %>% 
-  left_join(plant_links)
+  left_join(plant_links) %>% 
+  left_join(plant_native)
 
 write.csv(db4, "data/site_net_loc_fil_links.csv", row.names = FALSE)
 

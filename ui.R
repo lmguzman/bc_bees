@@ -62,13 +62,13 @@ shinyUI(dashboardPage(
                              conditionalPanel('input.net_type == "Pollinator"', 
                                               selectInput(inputId = 'bees',
                                                           label = 'Which pollinators do you want to include?',
-                                                          choices = c("bee1", 'bee2'), 
+                                                          choices = character(0), 
                                                           multiple = TRUE)
                              ),
                              conditionalPanel('input.net_type == "Plant"', 
                                               selectInput(inputId = 'plants',
                                                           label = 'Which plants do you want to include?s',
-                                                          choices = c("plant1", 'plant2'), 
+                                                          choices = character(0), 
                                                           multiple = TRUE)
                              )),
             # conditional panel for selecting get plants

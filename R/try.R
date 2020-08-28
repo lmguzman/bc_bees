@@ -23,7 +23,7 @@
 #  
 # input$name_type <- "Scientific names"
 # input$bees <- c("Adela\nseptentrionella")
-# 
+# input$plants <- c("Erigeron\nspeciosus")
 # input$name_type <- "Common names"
 # input$bees <- c("Digger bees", "Mining bee", "Mason bees")
 # input$bees <- c("Digger bees")
