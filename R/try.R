@@ -279,3 +279,18 @@
 # 
 # 
 # ##############################################################################
+
+# pl_sp <- c("Anaphalis\nmargaritacea", "Claytonia\nlanceolata", "Rosa\ngymnocarpa")
+# 
+# plant_address <- paste0("Images/Plants_clean/", str_replace(pl_sp, "\n", "_"), ".JPG")
+# 
+# pimage <- axis_canvas(max_plot, axis = 'y') + 
+#   draw_image(plant_address[1], y = 2.5, scale = 0.5) +
+#   draw_image(plant_address[2], y = 1.5, scale = 0.5) +
+#   draw_image(plant_address[3], y = 0.5, scale = 0.5)
+# 
+# 
+# # insert the image strip into the plot
+# ggdraw(insert_yaxis_grob(max_plot, pimage, position = "left"))
+
+

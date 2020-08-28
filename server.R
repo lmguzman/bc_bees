@@ -296,6 +296,7 @@ shinyServer(function(input, output, session) {
                                                          "#c7e9c0", "#a1d99b", "#41ab5d", "#238b45", "#006d2c", "#00441b")) +
             #scale_fill_viridis_d(name = "Type of \n pollinator") +
             xlab("") + ylab("Number of recorded observations") + scale_x_discrete(limits = plant_order$plant_sp)
+        
         }else if(input$maximizer == "Pollinator diversity"){
           
           fil3_db <- distinct(fil2_db[,c("plant_sp", "bee_sp", "bee_guild_otro")])
