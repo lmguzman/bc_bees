@@ -106,7 +106,7 @@ write.csv(db_lo, "data/site_net_locs.csv", row.names = FALSE)
 
 ################ making sure it is species ########
 
-## filter species that have less than 1 obsevation for plants and less than 5 observations for bees
+## filter species that have less than 5 obsevation for plants and less than 5 observations for bees
 
 db <- read.csv("data/site_net_locs.csv", stringsAsFactors = FALSE)
 
@@ -139,6 +139,7 @@ db_int <- db %>%
   filter(!bee_sp == "Hemiptera misc.") %>% 
   filter(!plant_sp == "Incidental Collection") %>% 
   filter(!plant_sp == "Miscellaneous white flower") %>% 
+  filter(!plant_sp == "Mate searching") %>% 
   filter(!plant_sp == "Mixed species") %>% 
   filter(!str_detect(plant_sp, "Nest")) %>% 
   filter(!plant_sp == "net") %>% 
@@ -148,6 +149,9 @@ db_int <- db %>%
   dplyr::mutate(plant_sp = ifelse(plant_sp == "Alyssum", "Lobularia", plant_sp)) %>% 
   dplyr::mutate(plant_sp = ifelse(plant_sp == "Convulvulus arvensis", "Convolvulus arvensis", plant_sp)) %>% 
   dplyr::mutate(plant_sp = ifelse(plant_sp == "Craetagus douglasii", "Crataegus douglasii", plant_sp)) 
+
+
+## filter species that have less than 5 observation for plants and less than 5 observations for bees
 
 bees_great <- db_int %>% 
   group_by(bee_sp) %>% 

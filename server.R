@@ -24,6 +24,7 @@ library(htmlwidgets)
 library(forcats)
 library(shinyalert)
 library(lubridate)
+library(magick)
 
 # source genetic algorithm functions
 source("R/functions.R")
@@ -60,8 +61,8 @@ eco_map <- leaflet(data = ecosec_map)
 pal <- c("#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17", "#004F2D")
 
 ## setting output directory for rds file for report
-output_dir <- "/home/lmguzman/ShinyApps/bc_bees/tmp"
-#output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees/tmp"
+#output_dir <- "/home/lmguzman/ShinyApps/bc_bees/tmp"
+output_dir <- "/Users/lmguzman/Documents/SFU/bc_bees/tmp"
 file_name <- "temp_output.rds"
 
 
@@ -396,7 +397,8 @@ shinyServer(function(input, output, session) {
           saveRDS(bip_table, file = file.path(output_dir, file_name))
           
           net <- bip_table %>% 
-            network(matrix.type = "bipartite", 
+            as.matrix() %>% 
+            network::network(matrix.type = "bipartite", 
                     ignore.eval = FALSE, 
                     names.eval = "weights")
           
@@ -436,7 +438,7 @@ shinyServer(function(input, output, session) {
             if(type_net == "Pollinator"){
               insect_att <- bip_table %>%
                 rownames_to_column("plant_common") %>%
-                pivot_longer(-plant_common, "bee_common", values_to = "count") %>%
+                pivot_longer(-plant_common, names_to = "bee_common", values_to = "count") %>%
                 filter(bee_common != " ") %>%
                 left_join(db[,c("bee_common", "bee_diet", "bee_nest_location", "bee_guild")]) %>%
                 distinct(bee_common, .keep_all = TRUE) %>%
@@ -450,7 +452,7 @@ shinyServer(function(input, output, session) {
             }else if(type_net == "Plant"){
               insect_att <- bip_table %>%
                 rownames_to_column("plant_common") %>%
-                pivot_longer(-plant_common, "bee_common", values_to = "count") %>%
+                pivot_longer(-plant_common, names_to = "bee_common", values_to = "count") %>%
                 filter(plant_common != "") %>%
                 left_join(db[,c("bee_common", "bee_diet", "bee_nest_location", "bee_guild")]) %>%
                 distinct(bee_common, .keep_all = TRUE) %>%
@@ -466,7 +468,7 @@ shinyServer(function(input, output, session) {
             if(type_net == "Pollinator"){
               insect_att <- bip_table %>%
                 rownames_to_column("plant_sp") %>%
-                pivot_longer(-plant_sp, "bee_sp", values_to = "count") %>%
+                pivot_longer(-plant_sp, names_to = "bee_sp", values_to = "count") %>%
                 filter(bee_sp != " ") %>%
                 left_join(db[,c("bee_sp", "bee_diet", "bee_nest_location", "bee_guild")]) %>%
                 distinct(bee_sp, .keep_all = TRUE) %>%
@@ -480,7 +482,7 @@ shinyServer(function(input, output, session) {
             } else if(type_net == "Plant"){
               insect_att <- bip_table %>%
                 rownames_to_column("plant_sp") %>%
-                pivot_longer(-plant_sp, "bee_sp", values_to = "count") %>%
+                pivot_longer(-plant_sp, names_to = "bee_sp", values_to = "count") %>%
                 filter(plant_sp != "") %>%
                 left_join(db[,c("bee_sp", "bee_diet", "bee_nest_location", "bee_guild")]) %>%
                 distinct(bee_sp, .keep_all = TRUE) %>%
@@ -824,6 +826,131 @@ shinyServer(function(input, output, session) {
                           envir = new.env(parent = globalenv())
         )
     })
+    
+    image_function <- function(act_type){
+      if(act_type == "Build Network"){
+        
+        #https://cran.r-project.org/web/packages/magick/vignettes/intro.html#Read_and_write
+        last_analysis <- readRDS("tmp/temp_output.rds")
+        
+        bees <- read.csv("data/pollinator_app - unique_bee.csv", stringsAsFactors = FALSE)
+        bee_addresses <- bees[bees$bee_sp %in% colnames(last_analysis),"picture_address"]
+        
+        #bee_addresses <- list.files("pictures/Pollinators_small")[149:161]
+        file_name <- unique(paste0("pictures/Pollinators_clean/", bee_addresses))
+        
+        img1 <- image_read(file_name)
+        img3 <- c(img1)
+        img <- image_scale(img3, "300x300")
+        
+        img_together <- image_append(image_scale(img, "x200"), stack = TRUE)
+        
+        image_write(img_together, path = "pictures/combined/img1.jpeg", format = "jpeg")
+        
+        # Return a list containing the filename
+        # list(src = "pictures/Plants_clean/Abelia_sp.JPG",
+        #      contentType = 'image/png',
+        #      width = 400,
+        #      height = 300,
+        #      alt = "This is alternate text")
+        list(src = "pictures/combined/img1.jpeg",
+             alt = "This is alternate text")
+        
+        
+      }else if(act_type == "Get plants"){
+        last_analysis <- readRDS("tmp/temp_output.rds")
+        
+        plants <- read.csv("data/pollinator_app - unique_plant.csv", stringsAsFactors = FALSE)
+        plant_addresses <- plants[plants$plant_sp %in% unique(last_analysis$plant_sp),"picture_address"]
+        
+        plant_addresses <- plant_addresses[!plant_addresses==""]
+        
+        file_name <- unique(paste0("pictures/Plants_clean/", plant_addresses))
+        
+        img1 <- image_read(file_name)
+        img3 <- c(img1)
+        img <- image_scale(img3, "300x300")
+        
+        img_together <- image_append(image_scale(img, "x200"), stack = TRUE)
+        
+        image_write(img_together, path = "pictures/combined/img1.jpeg", format = "jpeg")
+        
+        # Return a list containing the filename
+        # list(src = "pictures/Plants_clean/Abelia_sp.JPG",
+        #      contentType = 'image/png',
+        #      width = 400,
+        #      height = 300,
+        #      alt = "This is alternate text")
+        list(src = "pictures/combined/img1.jpeg",
+             alt = "This is alternate text")
+        
+      }else if(act_type == "Support crop"){
+        last_analysis <- readRDS("tmp/temp_output.rds")
+        
+        plants <- read.csv("data/pollinator_app - unique_plant.csv", stringsAsFactors = FALSE)
+        plant_addresses <- plants[plants$plant_sp %in% unique(last_analysis$plant_sp),"picture_address"]
+        
+        plant_addresses <- plant_addresses[!plant_addresses==""]
+        
+        file_name <- unique(paste0("pictures/Plants_clean/", plant_addresses))
+        
+        img1 <- image_read(file_name)
+        img3 <- c(img1)
+        img <- image_scale(img3, "300x300")
+        
+        img_together <- image_append(image_scale(img, "x200"), stack = TRUE)
+        
+        image_write(img_together, path = "pictures/combined/img1.jpeg", format = "jpeg")
+        
+        # Return a list containing the filename
+        # list(src = "pictures/Plants_clean/Abelia_sp.JPG",
+        #      contentType = 'image/png',
+        #      width = 400,
+        #      height = 300,
+        #      alt = "This is alternate text")
+        list(src = "pictures/combined/img1.jpeg",
+             alt = "This is alternate text")
+        
+      }
+    }
+    
+    # Make the plot
+    output$myImage <- renderImage({
+      
+      if(!is.null(plot_gg())){
+        
+        #https://cran.r-project.org/web/packages/magick/vignettes/intro.html#Read_and_write
+        last_analysis <- readRDS("tmp/temp_output.rds")
+        
+        bees <- read.csv("data/pollinator_app - unique_bee.csv", stringsAsFactors = FALSE)
+        bee_addresses <- bees[bees$bee_sp %in% colnames(last_analysis),"picture_address"]
+        
+        #bee_addresses <- list.files("pictures/Pollinators_small")[149:161]
+        file_name <- unique(paste0("pictures/Pollinators_clean/", bee_addresses))
+        
+        img1 <- image_read(file_name)
+        img3 <- c(img1)
+        img <- image_scale(img3, "300x300")
+        
+        img_together <- image_append(image_scale(img, "x200"), stack = TRUE)
+        
+        image_write(img_together, path = "pictures/combined/img1.jpeg", format = "jpeg")
+        
+        # Return a list containing the filename
+        # list(src = "pictures/Plants_clean/Abelia_sp.JPG",
+        #      contentType = 'image/png',
+        #      width = 400,
+        #      height = 300,
+        #      alt = "This is alternate text")
+        list(src = "pictures/combined/img1.jpeg",
+             alt = "This is alternate text")
+        
+      }else{
+        list(src = "",
+             alt = "This is alternate text")
+      }
+      
+    }, deleteFile = FALSE)
     
     ## Adds the feedback form
     formServer(formInfo)

@@ -123,7 +123,8 @@ shinyUI(dashboardPage(
                         # Render girafe plot
                         tabPanel("Plot", fluidRow(girafeOutput("plot1")),
                                  # button for generating report
-                                 fluidRow(downloadButton("report", "Generate report"))),
+                                 fluidRow(downloadButton("report", "Generate report")),
+                                 fluidRow(imageOutput("myImage"))),
                         
                         # Tab for help 
                         tabPanel("Help", 

@@ -1,4 +1,4 @@
-# input <- NULL
+input <- NULL
 # 
 # input$region <- 'Fraser Lowland'
 # input$region <- "All"
@@ -12,17 +12,17 @@
 # #testing
 # pl_sp <- colnames(v.mat.act)[c(1,10, 50, 20)]
 # 
-# input$net_type <- "Plant"
-# input$net_type <- "Pollinator"
-# 
-# input$plants <- c("Abelia")
-# input$plants <- c("Abelia", "Mahonia\naquifolium", "Collinsia\nparviflora")
+#input$net_type <- "Plant"
+input$net_type <- "Pollinator"
+
+#input$plants <- c("Abelia")
+#input$plants <- c("Abelia", "Mahonia\naquifolium", "Collinsia\nparviflora")
 #  
 # input$maximizer <-  "Pollinator abundance"
 # input$maximizer <-  "Phenological Coverage"
 #  
-# input$name_type <- "Scientific names"
-# input$bees <- c("Adela\nseptentrionella")
+ input$name_type <- "Scientific names"
+input$bees <- c("Adela\nseptentrionella")
 # input$plants <- c("Erigeron\nspeciosus")
 # input$name_type <- "Common names"
 # input$bees <- c("Digger bees", "Mining bee", "Mason bees")
